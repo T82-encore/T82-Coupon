@@ -36,6 +36,6 @@ public class Coupon {
     private DiscountType discountType;
 
     @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Coupon> coupons = new ArrayList<>();
+    private List<CouponBox> couponBoxes = new ArrayList<>();
 
 }
