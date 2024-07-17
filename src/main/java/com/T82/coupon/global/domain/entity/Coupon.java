@@ -1,5 +1,6 @@
 package com.T82.coupon.global.domain.entity;
 
+import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,7 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -17,21 +20,21 @@ import java.util.List;
 @Builder
 @Table(name = "COUPONS")
 public class Coupon {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     @Column(name = "COUPON_ID")
-    private Long couponId;
+    private UUID couponId;
     @Column(name = "COUPON_NAME")
     private String couponName;
     @Column(name = "DISCOUNT_VALUE")
     private Integer discountValue;
-    @Column(name = "VALID_START")
-    private Integer validStart;
     @Column(name = "VALID_END")
-    private Integer validEnd;
+    private Date validEnd;
     @Column(name = "MIN_PURCHASE")
     private Integer minPurchase;
     @Column(name = "DUPLICATE")
     private Boolean duplicate;
+    @Enumerated(EnumType.STRING)
+    private Category category;
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
 
