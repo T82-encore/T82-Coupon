@@ -11,15 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "COUPON_REPOSITORIES")
-public class CouponRepository {
+@Table(name = "COUPON_BOXES")
+public class CouponBox {
     @Id
-    @Column(name = "COUPON_ID")
-    private Long couponId;
     @Column(name = "USER_ID")
     private String userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_ID", nullable = false)
+    @JoinColumn(name = "COUPON_ID", nullable = false)
     private Coupon coupon;
 }
