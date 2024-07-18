@@ -1,5 +1,6 @@
 package com.T82.coupon.controller;
 
+import com.T82.coupon.global.domain.exception.CategoryNotFoundException;
 import com.T82.coupon.global.domain.exception.CouponNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,5 +15,9 @@ public class ExceptionController {
         return e.getMessage();
     }
 
-
+    @ExceptionHandler(CategoryNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String categoryNotFoundExceptionHandler(CategoryNotFoundException e){
+        return e.getMessage();
+    }
 }
