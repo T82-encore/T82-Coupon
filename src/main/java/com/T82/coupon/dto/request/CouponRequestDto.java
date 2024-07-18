@@ -7,7 +7,7 @@ import com.T82.coupon.global.domain.enums.DiscountType;
 import java.util.Date;
 import java.util.UUID;
 
-public record CreateCouponRequestDto(
+public record CouponRequestDto(
         String couponName,
         DiscountType discountType,
         Integer discountValue,
@@ -17,7 +17,7 @@ public record CreateCouponRequestDto(
         Category category
 
 ) {
-    public Coupon toEntity(CreateCouponRequestDto req){
+    public Coupon toEntity(CouponRequestDto req){
         return Coupon.builder()
                 .couponId(UUID.randomUUID())
                 .couponName(req.couponName)
