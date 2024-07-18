@@ -2,9 +2,13 @@ package com.T82.coupon.service;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
+import com.T82.coupon.global.domain.entity.Coupon;
+import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.DiscountType;
 import com.T82.coupon.global.domain.exception.CategoryNotFoundException;
+import com.T82.coupon.global.domain.exception.CouponNotFoundException;
+import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 import static com.T82.coupon.global.domain.enums.Category.SPORTS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +36,8 @@ class CouponServiceImplTest {
 
     @Autowired
     CouponRepository couponRepository;
+    @Autowired
+    CouponBoxRepository couponBoxRepository;
 
     @Nested
     @Transactional
@@ -91,6 +98,47 @@ class CouponServiceImplTest {
             CategoryNotFoundException categoryNotFoundException = assertThrows(CategoryNotFoundException.class,()-> couponService.getCouponsByCategory(String.valueOf(Category.from("hi")), pageable)); // 존재하지 않는 category값 전달
             // then
             assertEquals("존재하지 않는 카테고리 입니다.",categoryNotFoundException.getMessage());
+        }
+    }
+
+    @Nested
+    @Transactional
+    class 유저의_쿠폰함에_쿠폰_지급_테스트 {
+        @Test
+        void 유저의_쿠폰함에_쿠폰_지급_성공() {
+            // given
+            String userId = "testUserId";
+            CouponRequestDto couponRequestDto = new CouponRequestDto(
+                    "테스트쿠폰",
+                    DiscountType.PERCENTAGE,
+                    15,
+                    Date.from(Instant.parse("2024-12-31T23:59:59.00Z")),
+                    5000,
+                    true,
+                    SPORTS
+            );
+            Coupon coupon = couponRepository.saveAndFlush(couponRequestDto.toEntity(couponRequestDto));
+            UUID couponId = coupon.getCouponId();
+
+            // when
+            couponService.giveCouponToUser(couponId.toString(), userId);
+
+            // then
+            CouponBox savedCouponBox = couponBoxRepository.findAll().get(0);
+            assertEquals(couponId, savedCouponBox.getCoupon().getCouponId());
+            assertEquals(userId, savedCouponBox.getUserId());
+        }
+
+        @Test
+        void 유저의_쿠폰함에_쿠폰_지급_실패_쿠폰_없음() {
+            // given
+            String couponId = UUID.randomUUID().toString();
+            String userId = "testUserId";
+
+            // when & then
+            assertThrows(CouponNotFoundException.class, () -> {
+                couponService.giveCouponToUser(couponId, userId);
+            });
         }
     }
 }
