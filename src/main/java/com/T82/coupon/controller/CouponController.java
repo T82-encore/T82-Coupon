@@ -2,6 +2,7 @@ package com.T82.coupon.controller;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
+import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,18 @@ public class CouponController {
      * 카테고리별로 쿠폰 가져오기(페이징 5개씩)
      */
     @GetMapping("/coupons")
+    @ResponseStatus(HttpStatus.OK)
     public Page<CouponResponseDto> getCouponsByCategory(@RequestParam(value = "category", required = false) String category,
                                                     @PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
         return couponService.getCouponsByCategory(category,pageRequest);
+    }
+    /**
+     * 유저의 쿠폰함에 쿠폰 지급
+     */
+    @PostMapping("/coupons/{couponId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void giveCouponToUser(@PathVariable(name = "couponId") String couponId){
+        UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        couponService.giveCouponToUser(couponId,principal.getId());
     }
 }

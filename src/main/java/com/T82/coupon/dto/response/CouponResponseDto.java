@@ -1,6 +1,5 @@
 package com.T82.coupon.dto.response;
 
-import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.DiscountType;
@@ -12,10 +11,10 @@ public record CouponResponseDto(
         UUID couponId,
         String couponName,
         DiscountType discountType,
-        Integer discountValue,
+        int discountValue,
         Date validEnd,
         Integer minPurchase,
-        Boolean duplicate,
+        boolean duplicate,
         Category category
 
 ){

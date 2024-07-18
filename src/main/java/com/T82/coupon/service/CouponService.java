@@ -10,4 +10,6 @@ public interface CouponService {
     void createCoupon(CouponRequestDto req);
 
     Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest);
+
+    void giveCouponToUser(String couponId, String userId);
 }
