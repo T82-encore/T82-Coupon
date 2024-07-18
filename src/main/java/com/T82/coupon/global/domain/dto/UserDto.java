@@ -14,13 +14,11 @@ public class UserDto implements UserDetails {
 
     private final String id;
     private final String email;
-    private final String name;
 
     public static UserDto fromClaims(Claims claims){
         String id = claims.get("id", String.class);
-        String name = claims.get("name", String.class);
         String email = claims.get("email", String.class);
-        return new UserDto(id, name, email);
+        return new UserDto(id, email);
     }
 
     @Override
