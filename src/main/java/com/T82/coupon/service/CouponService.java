@@ -9,5 +9,5 @@ import org.springframework.data.domain.Pageable;
 public interface CouponService {
     void createCoupon(CouponRequestDto req);
 
-    Page<CouponResponseDto> getCouponsByCategory(Category category, Pageable pageRequest);
+    Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest);
 }

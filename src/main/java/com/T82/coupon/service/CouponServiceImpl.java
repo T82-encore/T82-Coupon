@@ -22,8 +22,8 @@ public class CouponServiceImpl implements CouponService{
     }
 
     @Override
-    public Page<CouponResponseDto> getCouponsByCategory(Category category, Pageable pageRequest) {
-        Page<Coupon> allByCategory = couponRepository.findAllByCategory(category, pageRequest);
+    public Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest) {
+        Page<Coupon> allByCategory = couponRepository.findAllByCategory(Category.from(category), pageRequest);
         return allByCategory.map(CouponResponseDto::from);
     }
 }

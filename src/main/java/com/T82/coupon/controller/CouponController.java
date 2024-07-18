@@ -31,7 +31,7 @@ public class CouponController {
      * 카테고리별로 쿠폰 가져오기(페이징 5개씩)
      */
     @GetMapping("/coupons")
-    public Page<CouponResponseDto> getCouponsByCategory(@RequestParam(value = "category", required = false) Category category,
+    public Page<CouponResponseDto> getCouponsByCategory(@RequestParam(value = "category", required = false) String category,
                                                     @PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
         return couponService.getCouponsByCategory(category,pageRequest);
     }
