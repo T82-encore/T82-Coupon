@@ -38,7 +38,7 @@ public class Coupon {
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
 
-    @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "id.coupon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CouponBox> couponBoxes = new ArrayList<>();
 
 }

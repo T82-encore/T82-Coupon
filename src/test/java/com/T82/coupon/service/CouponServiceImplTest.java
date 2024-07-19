@@ -2,6 +2,7 @@ package com.T82.coupon.service;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
+import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
@@ -18,6 +19,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,8 +130,8 @@ class CouponServiceImplTest {
 
             // then
             CouponBox savedCouponBox = couponBoxRepository.findAll().get(0);
-            assertEquals(couponId, savedCouponBox.getCoupon().getCouponId());
-            assertEquals(userId, savedCouponBox.getUserId());
+            assertEquals(couponId, savedCouponBox.getId().getCoupon().getCouponId());
+            assertEquals(userId, savedCouponBox.getId().getUserId());
         }
 
         @Test
@@ -139,6 +144,55 @@ class CouponServiceImplTest {
             assertThrows(CouponNotFoundException.class, () -> {
                 couponService.giveCouponToUser(couponId, userId);
             });
+        }
+    }
+
+    @Nested
+    @Transactional
+    class 유저의_유효한_쿠폰_반환_테스트 {
+        @Test
+        void 반환_성공() {
+            // given
+            String userId = "testUserId";
+            String userId2 = "testUserId2";
+            CouponRequestDto couponRequestDto = new CouponRequestDto(
+                    "테스트쿠폰",
+                    DiscountType.PERCENTAGE,
+                    15,
+                    Date.from(Instant.parse("2024-12-31T23:59:59.00Z")),
+                    5000,
+                    true,
+                    SPORTS
+            );
+            Coupon coupon = couponRepository.saveAndFlush(couponRequestDto.toEntity(couponRequestDto));
+            UUID couponId = coupon.getCouponId();
+            CouponRequestDto couponRequestDto2 = new CouponRequestDto(
+                    "테스트쿠폰",
+                    DiscountType.PERCENTAGE,
+                    15,
+                    Date.from(Instant.parse("2024-12-31T23:59:59.00Z")),
+                    5000,
+                    true,
+                    SPORTS
+            );
+            Coupon coupon2 = couponRepository.saveAndFlush(couponRequestDto2.toEntity(couponRequestDto2));
+            UUID couponId2 = coupon2.getCouponId();
+            couponService.giveCouponToUser(couponId.toString(), userId);
+            couponService.giveCouponToUser(couponId2.toString(), userId2);
+
+            // SecurityContext 설정
+            UserDto principal = new UserDto(userId, "test@example.com");
+            Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null);
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authentication);
+            SecurityContextHolder.setContext(securityContext);
+
+            Pageable pageable = PageRequest.of(0, 2);
+            // when
+            Page<CouponResponseDto> validCoupons = couponService.getValidCoupons(pageable);
+            // then
+            assertEquals(1, validCoupons.getNumberOfElements());
+            assertEquals(couponId,validCoupons.getContent().get(0).couponId());
         }
     }
 }
