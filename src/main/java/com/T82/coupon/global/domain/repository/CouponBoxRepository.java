@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CouponBoxRepository extends JpaRepository<CouponBox, CouponBoxId> {
-    @Query("select c from Coupon c join fetch c.couponBoxes cb where cb.id.userId = :userId and c.validEnd > current_date")
+    @Query("select c from Coupon c join fetch c.couponBoxes cb where cb.id.userId = :userId and c.validEnd > current_date and cb.isUsed = false")
             Page<Coupon> findAllByUserId(@Param("userId") String userId, Pageable pageable);
-
 }

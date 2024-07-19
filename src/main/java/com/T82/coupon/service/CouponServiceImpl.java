@@ -24,23 +24,36 @@ import java.util.UUID;
 public class CouponServiceImpl implements CouponService{
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
+
+    /**
+     * 쿠폰 생성 (관리자)
+     */
     @Override
     public void createCoupon(CouponRequestDto req) {
         couponRepository.save(req.toEntity(req));
     }
 
+    /**
+     * 카테고리별로 발급받을 수 있는 쿠폰 반환
+     */
     @Override
     public Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest) {
         Page<Coupon> allByCategory = couponRepository.findAllByCategory(Category.from(category), pageRequest);
         return allByCategory.map(CouponResponseDto::from);
     }
 
+    /**
+     * 쿠폰을 유저에게 지급
+     */
     @Override
     public void giveCouponToUser(String couponId, String userId) {
         Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(CouponNotFoundException::new);
         couponBoxRepository.save(CouponBox.toEntity(coupon,userId));
     }
 
+    /**
+     * 사용자가 가진 사용가능한 쿠폰 반환
+     */
     @Override
     public Page<CouponResponseDto> getValidCoupons(Pageable pageable) {
         UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
