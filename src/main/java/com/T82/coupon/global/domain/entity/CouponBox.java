@@ -13,26 +13,20 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table(name = "COUPON_BOXES")
 public class CouponBox {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "BOX_ID")
-    private String boxId;
 
-    @Column(name = "USER_ID")
-    private String userId;
+    @EmbeddedId
+    private CouponBoxId id;
 
     @Column(name = "IS_USED")
     private Boolean isUsed;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "COUPON_ID", nullable = false)
-    private Coupon coupon;
 
-    public static CouponBox toEntity(Coupon coupon,String userId){
+
+    public static CouponBox toEntity(Coupon coupon, String userId) {
+        CouponBoxId couponBoxId = new CouponBoxId(userId, coupon);
         return CouponBox.builder()
-                .boxId(null)
-                .userId(userId)
+                .id(couponBoxId)
                 .isUsed(false)
-                .coupon(coupon)
                 .build();
     }
 }

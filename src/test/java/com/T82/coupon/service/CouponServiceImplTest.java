@@ -125,8 +125,8 @@ class CouponServiceImplTest {
 
             // then
             CouponBox savedCouponBox = couponBoxRepository.findAll().get(0);
-            assertEquals(couponId, savedCouponBox.getCoupon().getCouponId());
-            assertEquals(userId, savedCouponBox.getUserId());
+            assertEquals(couponId, savedCouponBox.getId().getCoupon().getCouponId());
+            assertEquals(userId, savedCouponBox.getId().getUserId());
         }
 
         @Test

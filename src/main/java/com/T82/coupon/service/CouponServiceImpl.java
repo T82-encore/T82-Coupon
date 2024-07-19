@@ -2,6 +2,7 @@ package com.T82.coupon.service;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
+import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
@@ -12,9 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,5 +39,12 @@ public class CouponServiceImpl implements CouponService{
     public void giveCouponToUser(String couponId, String userId) {
         Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(CouponNotFoundException::new);
         couponBoxRepository.save(CouponBox.toEntity(coupon,userId));
+    }
+
+    @Override
+    public Page<CouponResponseDto> getValidCoupons(Pageable pageable) {
+        UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Page<Coupon> allByIds = couponBoxRepository.findAllByUserId(principal.getId(), pageable);
+        return allByIds.map(CouponResponseDto::from);
     }
 }
