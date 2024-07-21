@@ -48,7 +48,7 @@ class CouponServiceImplTest {
     @Transactional
     class 쿠폰생성 {
         @Test
-        void 쿠폰생성_성공() {
+        void 성공() {
 //    given
             CouponRequestDto coupon = new CouponRequestDto("테스트쿠폰", DiscountType.FIXED, 1000, Date.from(Instant.parse("2024-12-31T23:59:59.59Z")) , 10000, true, SPORTS);
             int lengthBefore = couponRepository.findAll().size();
