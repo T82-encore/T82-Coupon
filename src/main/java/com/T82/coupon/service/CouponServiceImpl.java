@@ -19,6 +19,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -77,6 +80,7 @@ public class CouponServiceImpl implements CouponService{
         req.coupons().forEach(couponReq -> {
             Coupon coupon = getCouponBox(req.userId(), couponReq.couponId()).get().getId().getCoupon();
             hasNonDuplicateCoupon[0] = validateNonDuplicateCoupon(hasNonDuplicateCoupon[0], coupon);
+            validateIsExpired(coupon);
             validateMinPurchase(req.amount(), coupon);
             validateCategory(Category.valueOf(req.category()), coupon);
         });
@@ -88,5 +92,4 @@ public class CouponServiceImpl implements CouponService{
         if (couponBoxOpt.isEmpty()) throw new CouponNotFoundException();
         return couponBoxOpt;
     }
-
 }

@@ -7,6 +7,9 @@ import com.T82.coupon.global.domain.exception.DuplicateCouponException;
 import com.T82.coupon.global.domain.exception.MinPurchaseException;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 
 @Component
 public class CouponValidateUtil {
@@ -30,5 +33,16 @@ public class CouponValidateUtil {
             hasNonDuplicateCoupon = true;
         }
         return hasNonDuplicateCoupon;
+    }
+
+    public static void validateIsExpired(Coupon coupon) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime validEndLocalDateTime = coupon.getValidEnd().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+
+        if (now.isAfter(validEndLocalDateTime)) {
+            throw new IllegalArgumentException("Coupon is expired");
+        }
     }
 }
