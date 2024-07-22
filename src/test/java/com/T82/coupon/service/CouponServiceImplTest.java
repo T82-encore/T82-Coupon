@@ -12,6 +12,7 @@ import com.T82.coupon.global.domain.enums.DiscountType;
 import com.T82.coupon.global.domain.exception.CategoryNotFoundException;
 import com.T82.coupon.global.domain.exception.CouponNotFoundException;
 import com.T82.coupon.global.domain.exception.DuplicateCouponException;
+import com.T82.coupon.global.domain.exception.MinPurchaseException;
 import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -237,7 +238,7 @@ class CouponServiceImplTest {
         }
 
         @Test
-        void 중복쿠폰_실패테스트() throws ParseException {
+        void 중복_불가능_쿠폰_실패테스트() throws ParseException {
 //          given
             // 쿠폰 3개 생성
             Coupon 쿠폰1 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰1").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(false).category(SPORTS).build());
@@ -253,6 +254,26 @@ class CouponServiceImplTest {
 //            when & then
             assertThrows(DuplicateCouponException.class, () -> {
                 couponService.verifyCoupons(new CouponVerifyRequestDto(userId, 100000, SPORTS.toString(), couponUsages));
+            });
+        }
+
+        @Test
+        void 최소금액_실패테스트() throws ParseException {
+//          given
+            // 쿠폰 3개 생성
+            Coupon 쿠폰1 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰1").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(1000).duplicate(true).category(SPORTS).build());
+            Coupon 쿠폰2 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰2").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(1000).duplicate(false).category(SPORTS).build());
+            // 쿠폰함에 3개 넣고
+            couponBoxRepository.save(CouponBox.toEntity(쿠폰1,userId));
+            couponBoxRepository.save(CouponBox.toEntity(쿠폰2,userId));
+            // CouponVerifyRequestDto 생성
+            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
+                    new CouponVerifyRequestDto.CouponUsage(쿠폰1.getCouponId().toString()),
+                    new CouponVerifyRequestDto.CouponUsage(쿠폰2.getCouponId().toString())
+            );
+//            when & then
+            assertThrows(MinPurchaseException.class, () -> {
+                couponService.verifyCoupons(new CouponVerifyRequestDto(userId, 100, SPORTS.toString(), couponUsages));
             });
         }
     }
