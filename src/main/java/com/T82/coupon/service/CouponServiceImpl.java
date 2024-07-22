@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.T82.coupon.utils.CouponUtil.*;
+import static com.T82.coupon.utils.CouponValidateUtil.*;
 
 @Service
 @Slf4j
@@ -73,22 +73,16 @@ public class CouponServiceImpl implements CouponService{
     @Override
     @Transactional
     public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
-        // 조건1: 중복 불가능한 쿠폰이 하나만 있어야 한다.
         final boolean[] hasNonDuplicateCoupon = {false};
-
         req.coupons().forEach(couponReq -> {
             Coupon coupon = getCouponBox(req.userId(), couponReq.couponId()).get().getId().getCoupon();
-            // 조건1: 중복 불가능한 쿠폰이 하나만 있어야 한다.
             hasNonDuplicateCoupon[0] = validateNonDuplicateCoupon(hasNonDuplicateCoupon[0], coupon);
-            // 조건2: 최소가능 금액이 amount 이상이어야 한다.
             validateMinPurchase(req.amount(), coupon);
-            // 조건3: 입력 받은 Category가 쿠폰의 Category와 같거나 ALL이여야 한다.
             validateCategory(Category.valueOf(req.category()), coupon);
         });
-
-        // 검증 결과를 반환
         return CouponVerifyResponseDto.from("OK");
     }
+
     public Optional<CouponBox> getCouponBox(String userId, String couponId) {
         Optional<CouponBox> couponBoxOpt = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId);
         if (couponBoxOpt.isEmpty()) throw new CouponNotFoundException();

@@ -5,13 +5,11 @@ import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.exception.CategoryNotMatchException;
 import com.T82.coupon.global.domain.exception.DuplicateCouponException;
 import com.T82.coupon.global.domain.exception.MinPurchaseException;
-import com.T82.coupon.global.domain.repository.CouponBoxRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 
 @Component
-public class CouponUtil {
+public class CouponValidateUtil {
     public static void validateCategory(Category category, Coupon coupon) {
         if (!coupon.getCategory().equals(category) && !coupon.getCategory().equals(Category.ALL)) {
             throw new CategoryNotMatchException();

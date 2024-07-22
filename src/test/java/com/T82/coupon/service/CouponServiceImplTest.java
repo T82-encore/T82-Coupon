@@ -1,7 +1,9 @@
 package com.T82.coupon.service;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
+import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
+import com.T82.coupon.dto.response.CouponVerifyResponseDto;
 import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponBox;
@@ -11,6 +13,7 @@ import com.T82.coupon.global.domain.exception.CategoryNotFoundException;
 import com.T82.coupon.global.domain.exception.CouponNotFoundException;
 import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +29,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static com.T82.coupon.global.domain.enums.Category.SPORTS;
@@ -43,6 +51,16 @@ class CouponServiceImplTest {
     CouponRepository couponRepository;
     @Autowired
     CouponBoxRepository couponBoxRepository;
+    String userId;
+    @BeforeEach
+    void setUp() {
+        userId = "testUserId";
+        UserDto principal = new UserDto(userId, "test@example.com");
+        Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null);
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(authentication);
+        SecurityContextHolder.setContext(securityContext);
+    }
 
     @Nested
     @Transactional
@@ -180,19 +198,40 @@ class CouponServiceImplTest {
             couponService.giveCouponToUser(couponId.toString(), userId);
             couponService.giveCouponToUser(couponId2.toString(), userId2);
 
-            // SecurityContext 설정
-            UserDto principal = new UserDto(userId, "test@example.com");
-            Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null);
-            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-            securityContext.setAuthentication(authentication);
-            SecurityContextHolder.setContext(securityContext);
-
             Pageable pageable = PageRequest.of(0, 2);
             // when
             Page<CouponResponseDto> validCoupons = couponService.getValidCoupons(pageable);
             // then
             assertEquals(1, validCoupons.getNumberOfElements());
             assertEquals(couponId,validCoupons.getContent().get(0).couponId());
+        }
+    }
+
+    @Nested
+    @Transactional
+    class 쿠폰_검증{
+        LocalDate localDate = LocalDate.of(3000, 12, 31);
+        Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        @Test
+        void 성공() throws ParseException {
+//          given
+            // 쿠폰 3개 생성
+            Coupon 쿠폰1 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰1").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(false).category(SPORTS).build());
+            Coupon 쿠폰2 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰2").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(true).category(SPORTS).build());
+            Coupon 쿠폰3 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰3").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(true).category(SPORTS).build());
+            // 쿠폰함에 3개 넣고
+            couponBoxRepository.save(CouponBox.toEntity(쿠폰1,userId));
+            couponBoxRepository.save(CouponBox.toEntity(쿠폰2,userId));
+            couponBoxRepository.save(CouponBox.toEntity(쿠폰3,userId));
+            // CouponVerifyRequestDto 생성
+            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
+                    new CouponVerifyRequestDto.CouponUsage(쿠폰1.getCouponId().toString()),
+                    new CouponVerifyRequestDto.CouponUsage(쿠폰2.getCouponId().toString()),
+                    new CouponVerifyRequestDto.CouponUsage(쿠폰3.getCouponId().toString())
+            );
+            CouponVerifyResponseDto couponVerifyResponseDto = couponService.verifyCoupons(new CouponVerifyRequestDto(userId, 100000, SPORTS.toString(), couponUsages));
+//            when
+            assertEquals("OK",couponVerifyResponseDto.status());
         }
     }
 }
