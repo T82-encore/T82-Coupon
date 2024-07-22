@@ -44,4 +44,11 @@ public class ExceptionController {
         log.error("ERROR : MinPurchaseException (BE404 - CONFLICT)", e);
         return e.getMessage();
     }
+
+    @ExceptionHandler(ExpiredCouponException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String ExpiredCouponExceptionHandler(ExpiredCouponException e){
+        log.error("ERROR : ExpiredCouponException (BE404 - CONFLICT)", e);
+        return e.getMessage();
+    }
 }

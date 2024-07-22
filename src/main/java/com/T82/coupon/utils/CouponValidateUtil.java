@@ -4,6 +4,7 @@ import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.exception.CategoryNotMatchException;
 import com.T82.coupon.global.domain.exception.DuplicateCouponException;
+import com.T82.coupon.global.domain.exception.ExpiredCouponException;
 import com.T82.coupon.global.domain.exception.MinPurchaseException;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +43,7 @@ public class CouponValidateUtil {
                 .toLocalDateTime();
 
         if (now.isAfter(validEndLocalDateTime)) {
-            throw new IllegalArgumentException("Coupon is expired");
+            throw new ExpiredCouponException();
         }
     }
 }
