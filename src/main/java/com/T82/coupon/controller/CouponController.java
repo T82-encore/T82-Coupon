@@ -1,7 +1,9 @@
 package com.T82.coupon.controller;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
+import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
+import com.T82.coupon.dto.response.CouponVerifyResponseDto;
 import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -53,5 +56,13 @@ public class CouponController {
     public Page<CouponResponseDto> getCouponsByCategory(@RequestParam(value = "category", required = false) String category,
                                                         @PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
         return couponService.getCouponsByCategory(category,pageRequest);
+    }
+    /**
+     * 사용가능한 쿠폰인지 검증 (결제 서비스에서 호출)
+     */
+    @PostMapping("/verify")
+    @ResponseStatus(HttpStatus.OK)
+    public CouponVerifyResponseDto verifyCoupons(@RequestBody CouponVerifyRequestDto req) {
+        return couponService.verifyCoupons(req);
     }
 }
