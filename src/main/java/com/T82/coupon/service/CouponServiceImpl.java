@@ -8,6 +8,7 @@ import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
+import com.T82.coupon.global.domain.enums.Status;
 import com.T82.coupon.global.domain.exception.*;
 import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
@@ -19,11 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static com.T82.coupon.utils.CouponValidateUtil.*;
 
@@ -76,13 +73,13 @@ public class CouponServiceImpl implements CouponService{
     @Override
     @Transactional
     public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
-        final boolean[] hasNonDuplicateCoupon = {false};
+        Map<String,String> validateDuplicate = new HashMap<>();
         req.coupons().forEach(couponReq -> {
             Coupon coupon = getCouponBox(req.userId(), couponReq.couponId()).get().getId().getCoupon();
-            hasNonDuplicateCoupon[0] = validateNonDuplicateCoupon(hasNonDuplicateCoupon[0], coupon);
-            validateIsExpired(coupon);
-            validateMinPurchase(req.amount(), coupon);
-            validateCategory(Category.valueOf(req.category()), coupon);
+            Optional<CouponBox> couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(req.coupons().get(0).couponId()),req.userId());
+            validateIsExpired(couponBox.get().getStatus()); // 상태 검증
+            validateMinPurchase(couponReq.beforeAmount(), coupon); // 최소금액 검증
+            validateNonDuplicateCoupon(validateDuplicate,couponReq.seatId(), couponReq.couponId());
         });
         return CouponVerifyResponseDto.from("OK");
     }
@@ -91,5 +88,27 @@ public class CouponServiceImpl implements CouponService{
         Optional<CouponBox> couponBoxOpt = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId);
         if (couponBoxOpt.isEmpty()) throw new CouponNotFoundException();
         return couponBoxOpt;
+    }
+
+    public void validateNonDuplicateCoupon(Map<String,String> validMap, String seatId, String couponId) {
+        if(validMap.containsKey(seatId)){
+            Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).get();
+            if (!coupon.getDuplicate()) {
+                Coupon coupon1 = couponRepository.findById(UUID.fromString(validMap.get(seatId))).get();
+                if(!coupon1.getDuplicate()) throw new DuplicateCouponException();
+            }
+        }else{
+            validMap.put(seatId,couponId);
+        }
+    }
+
+    public void validateMinPurchase(int amount, Coupon coupon) {
+        if (coupon.getMinPurchase() > amount) {
+            throw new MinPurchaseException();
+        }
+    }
+
+    public void validateIsExpired(Status status) {
+        if (status!=Status.UNUSED) throw new ExpiredCouponException();
     }
 }

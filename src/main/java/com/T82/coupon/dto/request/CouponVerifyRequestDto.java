@@ -5,8 +5,8 @@ import com.T82.coupon.global.domain.enums.Category;
 import java.util.List;
 
 
-public record CouponVerifyRequestDto (String userId, Integer amount,String category,List<CouponUsage> coupons){
-    public record CouponUsage (String couponId){
+public record CouponVerifyRequestDto (String userId, List<CouponUsage> coupons){
+    public record CouponUsage (String couponId, Integer beforeAmount, String seatId){
     }
 
 }
