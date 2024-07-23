@@ -2,6 +2,7 @@ package com.T82.coupon.service;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
+import com.T82.coupon.dto.request.UseCouponRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
 import com.T82.coupon.dto.response.CouponVerifyResponseDto;
 import com.T82.coupon.global.domain.dto.UserDto;
@@ -16,13 +17,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import static com.T82.coupon.utils.CouponValidateUtil.*;
 
 @Service
 @Slf4j
@@ -30,6 +31,31 @@ import static com.T82.coupon.utils.CouponValidateUtil.*;
 public class CouponServiceImpl implements CouponService{
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
+
+    /**
+     * 쿠폰 사용시 결제서비스 -> 쿠폰서비스
+     */
+    @KafkaListener(topics = "coupon_used")
+    @Transactional
+    public void useCoupons(UseCouponRequestDto req) {
+        log.error("Received request: couponIds={}, userId={}", req.couponIds().toString(), req.userId());
+
+        req.couponIds().stream().distinct().forEach(couponId -> {
+            try {
+                Optional<CouponBox> optionalCouponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId());
+                if (optionalCouponBox.isPresent()) {
+                    CouponBox couponBox = optionalCouponBox.get();
+                    couponBox.setStatus(Status.USED);
+                } else {
+                    log.error("CouponBox not found for couponId={} and userId={}", couponId, req.userId());
+                }
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid UUID format for couponId={}", couponId, e);
+            } catch (Exception e) {
+                log.error("Error processing couponId={} for userId={}", couponId, req.userId(), e);
+            }
+        });
+    }
 
     /**
      * 쿠폰 생성 (관리자)
@@ -79,10 +105,12 @@ public class CouponServiceImpl implements CouponService{
             Optional<CouponBox> couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(req.coupons().get(0).couponId()),req.userId());
             validateIsExpired(couponBox.get().getStatus()); // 상태 검증
             validateMinPurchase(couponReq.beforeAmount(), coupon); // 최소금액 검증
-            validateNonDuplicateCoupon(validateDuplicate,couponReq.seatId(), couponReq.couponId());
+            validateNonDuplicateCoupon(validateDuplicate,couponReq.seatId(), couponReq.couponId()); // 중복쿠폰 검증
         });
         return CouponVerifyResponseDto.from("OK");
     }
+
+
 
     public Optional<CouponBox> getCouponBox(String userId, String couponId) {
         Optional<CouponBox> couponBoxOpt = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId);
