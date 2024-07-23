@@ -24,11 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class CouponServiceImpl implements CouponService{
+//verifyCouponService
+public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
 
@@ -38,22 +38,9 @@ public class CouponServiceImpl implements CouponService{
     @KafkaListener(topics = "coupon_used")
     @Transactional
     public void useCoupons(UseCouponRequestDto req) {
-        log.error("Received request: couponIds={}, userId={}", req.couponIds().toString(), req.userId());
-
         req.couponIds().stream().distinct().forEach(couponId -> {
-            try {
-                Optional<CouponBox> optionalCouponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId());
-                if (optionalCouponBox.isPresent()) {
-                    CouponBox couponBox = optionalCouponBox.get();
-                    couponBox.setStatus(Status.USED);
-                } else {
-                    log.error("CouponBox not found for couponId={} and userId={}", couponId, req.userId());
-                }
-            } catch (IllegalArgumentException e) {
-                log.error("Invalid UUID format for couponId={}", couponId, e);
-            } catch (Exception e) {
-                log.error("Error processing couponId={} for userId={}", couponId, req.userId(), e);
-            }
+            CouponBox couponBox = getCouponBox(req.userId(), couponId);
+            couponBox.setStatus(Status.USED);
         });
     }
 
@@ -101,42 +88,33 @@ public class CouponServiceImpl implements CouponService{
     public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
         Map<String,String> validateDuplicate = new HashMap<>();
         req.coupons().forEach(couponReq -> {
-            Coupon coupon = getCouponBox(req.userId(), couponReq.couponId()).get().getId().getCoupon();
-            Optional<CouponBox> couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(req.coupons().get(0).couponId()),req.userId());
-            validateIsExpired(couponBox.get().getStatus()); // 상태 검증
-            validateMinPurchase(couponReq.beforeAmount(), coupon); // 최소금액 검증
-            validateNonDuplicateCoupon(validateDuplicate,couponReq.seatId(), couponReq.couponId()); // 중복쿠폰 검증
+            Coupon coupon = getCouponBox(req.userId(), couponReq.couponId()).getId().getCoupon();
+            CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(req.coupons().get(0).couponId()),req.userId()).orElseThrow(CouponNotFoundException::new);
+            validateCoupon(validateDuplicate, couponReq, coupon, couponBox);
         });
         return CouponVerifyResponseDto.from("OK");
     }
 
+    public void validateCoupon(Map<String, String> validateDuplicate, CouponVerifyRequestDto.CouponUsage couponReq, Coupon coupon, CouponBox couponBox) {
+        if (couponBox.getStatus().validateIsExpired()) throw new ExpiredCouponException(); // 상태 검증
+        if (coupon.validateMinPurchase(couponReq.beforeAmount())) throw new MinPurchaseException(); // 최소금액 검증
+        validateNonDuplicateCoupon(validateDuplicate, couponReq.seatId(), couponReq.couponId()); // 중복쿠폰 검증
+    }
 
-
-    public Optional<CouponBox> getCouponBox(String userId, String couponId) {
-        Optional<CouponBox> couponBoxOpt = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId);
-        if (couponBoxOpt.isEmpty()) throw new CouponNotFoundException();
-        return couponBoxOpt;
+    public CouponBox getCouponBox(String userId, String couponId) {
+        return couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId)
+                .orElseThrow(CouponNotFoundException::new);
     }
 
     public void validateNonDuplicateCoupon(Map<String,String> validMap, String seatId, String couponId) {
         if(validMap.containsKey(seatId)){
-            Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).get();
+            Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(CouponNotFoundException::new);
             if (!coupon.getDuplicate()) {
-                Coupon coupon1 = couponRepository.findById(UUID.fromString(validMap.get(seatId))).get();
-                if(!coupon1.getDuplicate()) throw new DuplicateCouponException();
+                Coupon couponSaved = couponRepository.findById(UUID.fromString(validMap.get(seatId))).orElseThrow(CouponNotFoundException::new);
+                if(!couponSaved.getDuplicate()) throw new DuplicateCouponException();
             }
         }else{
             validMap.put(seatId,couponId);
         }
-    }
-
-    public void validateMinPurchase(int amount, Coupon coupon) {
-        if (coupon.getMinPurchase() > amount) {
-            throw new MinPurchaseException();
-        }
-    }
-
-    public void validateIsExpired(Status status) {
-        if (status!=Status.UNUSED) throw new ExpiredCouponException();
     }
 }
