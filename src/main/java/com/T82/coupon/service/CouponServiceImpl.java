@@ -35,7 +35,7 @@ public class CouponServiceImpl implements CouponService {
     /**
      * 쿠폰 사용시 결제서비스 -> 쿠폰서비스
      */
-    @KafkaListener(topics = "coupon_used")
+    @KafkaListener(topics = "couponUsed")
     @Transactional
     public void useCoupons(UseCouponRequestDto req) {
         req.couponIds().stream().distinct().forEach(couponId -> {
