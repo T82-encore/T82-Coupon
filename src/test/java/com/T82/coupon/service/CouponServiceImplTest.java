@@ -2,6 +2,7 @@ package com.T82.coupon.service;
 
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
+import com.T82.coupon.dto.request.UseCouponRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
 import com.T82.coupon.dto.response.CouponVerifyResponseDto;
 import com.T82.coupon.global.domain.dto.UserDto;
@@ -21,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -30,12 +30,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.T82.coupon.global.domain.enums.Category.SPORTS;
@@ -331,6 +331,41 @@ class CouponServiceImplTest {
             assertThrows(ExpiredCouponException.class, () -> {
                 couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages));
             });
+        }
+        @Nested
+        @Transactional
+        class 결제시_쿠폰상태_변경_테스트 {
+            @Test
+            void 성공() {
+                // Given
+                Coupon coupon = Coupon.builder()
+                        .couponId(UUID.randomUUID())
+                        .couponName("Test Coupon")
+                        .discountValue(10)
+                        .validEnd(new Date())
+                        .minPurchase(100)
+                        .duplicate(false)
+                        .category(SPORTS)
+                        .discountType(DiscountType.PERCENTAGE)
+                        .build();
+                couponRepository.save(coupon);
+
+                CouponBox couponBox = CouponBox.toEntity(coupon, "testUserId");
+                couponBoxRepository.save(couponBox);
+
+                String userId = "testUserId";
+                String couponId = coupon.getCouponId().toString();
+
+                UseCouponRequestDto requestDto = new UseCouponRequestDto(userId, List.of(couponId));
+
+                // Act
+                couponService.useCoupons(requestDto);
+
+                // Then
+                Optional<CouponBox> updatedCouponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId);
+                assertTrue(updatedCouponBox.isPresent());
+                assertEquals(Status.USED, updatedCouponBox.get().getStatus()); // Validate that the coupon status is updated
+            }
         }
     }
 }

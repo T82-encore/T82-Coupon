@@ -2,6 +2,7 @@ package com.T82.coupon.global.domain.entity;
 
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.DiscountType;
+import com.T82.coupon.global.domain.exception.MinPurchaseException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,4 +42,7 @@ public class Coupon {
     @OneToMany(mappedBy = "id.coupon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CouponBox> couponBoxes = new ArrayList<>();
 
+    public boolean validateMinPurchase(int amount) {
+        return minPurchase > amount;
+    }
 }

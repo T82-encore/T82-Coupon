@@ -15,4 +15,8 @@ public enum Status {
             default -> throw new StatusNotFoundException();
         };
     }
+
+    public boolean validateIsExpired() {
+        return !this.equals(Status.UNUSED);
+    }
 }
