@@ -13,4 +13,6 @@ import java.util.UUID;
 public interface CouponRepository extends JpaRepository<Coupon, UUID> {
     @Query("select c from Coupon c where c.category=:category and c.validEnd > current_date")
     Page<Coupon> findAllByCategory(@Param("category") Category category, Pageable pageRequest);
+
+
 }

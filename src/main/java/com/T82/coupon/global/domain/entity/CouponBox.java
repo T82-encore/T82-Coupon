@@ -1,10 +1,8 @@
 package com.T82.coupon.global.domain.entity;
 
+import com.T82.coupon.global.domain.enums.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
@@ -13,26 +11,18 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table(name = "COUPON_BOXES")
 public class CouponBox {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "BOX_ID")
-    private String boxId;
 
-    @Column(name = "USER_ID")
-    private String userId;
+    @EmbeddedId
+    private CouponBoxId id;
 
-    @Column(name = "IS_USED")
-    private Boolean isUsed;
+    @Column(name = "STATUS") @Setter
+    private Status status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "COUPON_ID", nullable = false)
-    private Coupon coupon;
-
-    public static CouponBox toEntity(Coupon coupon,String userId){
+    public static CouponBox toEntity(Coupon coupon, String userId) {
+        CouponBoxId couponBoxId = new CouponBoxId(userId, coupon);
         return CouponBox.builder()
-                .boxId(null)
-                .userId(userId)
-                .isUsed(false)
-                .coupon(coupon)
+                .id(couponBoxId)
+                .status(Status.UNUSED)
                 .build();
     }
 }
