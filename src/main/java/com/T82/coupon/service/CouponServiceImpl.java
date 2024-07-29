@@ -65,16 +65,16 @@ public class CouponServiceImpl implements CouponService {
      * 쿠폰을 유저에게 지급
      */
     @Override
-    public void giveCouponToUser(String couponId, String userId) {
+    public void giveCouponToUser(String couponId, UserDto userDto) {
         Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(CouponNotFoundException::new);
-        couponBoxRepository.save(CouponBox.toEntity(coupon,userId));
+        couponBoxRepository.save(CouponBox.toEntity(coupon, userDto.getId()));
     }
 
     /**
      * 사용자가 가진 사용가능한 쿠폰 반환
      */
     @Override
-    public Page<CouponResponseDto> getValidCoupons(Pageable pageable) {
+    public Page<CouponResponseDto> getValidCoupons(Pageable pageable,UserDto userDto) {
         UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Page<Coupon> allByIds = couponBoxRepository.findAllByUserId(principal.getId(), pageable);
         return allByIds.map(CouponResponseDto::from);

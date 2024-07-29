@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,17 +37,16 @@ public class CouponController {
      */
     @PostMapping("/{couponId}")
     @ResponseStatus(HttpStatus.OK)
-    public void giveCouponToUser(@PathVariable(name = "couponId") String couponId){
-        UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        couponService.giveCouponToUser(couponId,principal.getId());
+    public void giveCouponToUser(@AuthenticationPrincipal UserDto userDto, @PathVariable(name = "couponId") String couponId){
+        couponService.giveCouponToUser(couponId,userDto);
     }
     /**
      * 유저가 보유한 사용기한이 지나지 않은 쿠폰 내역 가져오기(10개)
      */
     @GetMapping("/valid")
     @ResponseStatus(HttpStatus.OK)
-    public Page<CouponResponseDto> getValidCoupons(@PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
-        return couponService.getValidCoupons(pageRequest);
+    public Page<CouponResponseDto> getValidCoupons(@AuthenticationPrincipal UserDto userDto,@PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
+        return couponService.getValidCoupons(pageRequest,userDto);
     }
     /**
      * 카테고리별로 쿠폰 가져오기(페이징 5개씩)
