@@ -67,13 +67,13 @@ class CouponServiceImplTest {
     class 쿠폰생성 {
         @Test
         void 성공() {
-//    given
+            // given
             CouponRequestDto coupon = new CouponRequestDto("테스트쿠폰", DiscountType.FIXED, 1000, Date.from(Instant.parse("2024-12-31T23:59:59.59Z")) , 10000, true, SPORTS);
             int lengthBefore = couponRepository.findAll().size();
-//    when
+            // when
             couponService.createCoupon(coupon);
-//    then
-            assertEquals(couponRepository.findAll().size(),lengthBefore + 1);
+            // then
+            assertEquals(couponRepository.findAll().size(), lengthBefore + 1);
         }
     }
 
@@ -118,9 +118,9 @@ class CouponServiceImplTest {
 
             // when
             Pageable pageable = PageRequest.of(0, 5); // 페이지 크기를 크게 지정하여 모든 결과를 가져오도록 함
-            CategoryNotFoundException categoryNotFoundException = assertThrows(CategoryNotFoundException.class,()-> couponService.getCouponsByCategory(String.valueOf(Category.from("hi")), pageable)); // 존재하지 않는 category값 전달
+            CategoryNotFoundException categoryNotFoundException = assertThrows(CategoryNotFoundException.class, () -> couponService.getCouponsByCategory(String.valueOf(Category.from("hi")), pageable)); // 존재하지 않는 category값 전달
             // then
-            assertEquals("존재하지 않는 카테고리 입니다.",categoryNotFoundException.getMessage());
+            assertEquals("존재하지 않는 카테고리 입니다.", categoryNotFoundException.getMessage());
         }
     }
 
@@ -130,7 +130,6 @@ class CouponServiceImplTest {
         @Test
         void 유저의_쿠폰함에_쿠폰_지급_성공() {
             // given
-            String userId = "testUserId";
             CouponRequestDto couponRequestDto = new CouponRequestDto(
                     "테스트쿠폰",
                     DiscountType.PERCENTAGE,
@@ -142,25 +141,26 @@ class CouponServiceImplTest {
             );
             Coupon coupon = couponRepository.saveAndFlush(couponRequestDto.toEntity(couponRequestDto));
             UUID couponId = coupon.getCouponId();
+            UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
             // when
-            couponService.giveCouponToUser(couponId.toString(), userId);
+            couponService.giveCouponToUser(couponId.toString(), principal);
 
             // then
             CouponBox savedCouponBox = couponBoxRepository.findAll().get(0);
             assertEquals(couponId, savedCouponBox.getId().getCoupon().getCouponId());
-            assertEquals(userId, savedCouponBox.getId().getUserId());
+            assertEquals(principal.getId(), savedCouponBox.getId().getUserId());
         }
 
         @Test
         void 유저의_쿠폰함에_쿠폰_지급_실패_쿠폰_없음() {
             // given
             String couponId = UUID.randomUUID().toString();
-            String userId = "testUserId";
+            UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
             // when & then
             assertThrows(CouponNotFoundException.class, () -> {
-                couponService.giveCouponToUser(couponId, userId);
+                couponService.giveCouponToUser(couponId, principal);
             });
         }
     }
@@ -171,8 +171,7 @@ class CouponServiceImplTest {
         @Test
         void 반환_성공() {
             // given
-            String userId = "testUserId";
-            String userId2 = "testUserId2";
+            UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             CouponRequestDto couponRequestDto = new CouponRequestDto(
                     "테스트쿠폰",
                     DiscountType.PERCENTAGE,
@@ -185,7 +184,7 @@ class CouponServiceImplTest {
             Coupon coupon = couponRepository.saveAndFlush(couponRequestDto.toEntity(couponRequestDto));
             UUID couponId = coupon.getCouponId();
             CouponRequestDto couponRequestDto2 = new CouponRequestDto(
-                    "테스트쿠폰",
+                    "테스트쿠폰2",
                     DiscountType.PERCENTAGE,
                     15,
                     Date.from(Instant.parse("2024-12-31T23:59:59.00Z")),
@@ -195,18 +194,18 @@ class CouponServiceImplTest {
             );
             Coupon coupon2 = couponRepository.saveAndFlush(couponRequestDto2.toEntity(couponRequestDto2));
             UUID couponId2 = coupon2.getCouponId();
-            couponService.giveCouponToUser(couponId.toString(), userId);
-            couponService.giveCouponToUser(couponId2.toString(), userId2);
+            couponService.giveCouponToUser(couponId.toString(), principal);
+            couponService.giveCouponToUser(couponId2.toString(), principal);
 
             Pageable pageable = PageRequest.of(0, 2);
             // when
-            Page<CouponResponseDto> validCoupons = couponService.getValidCoupons(pageable);
+            Page<CouponResponseDto> validCoupons = couponService.getValidCoupons(pageable, principal);
             // then
-            assertEquals(1, validCoupons.getNumberOfElements());
-            assertEquals(couponId,validCoupons.getContent().get(0).couponId());
+            assertEquals(2, validCoupons.getNumberOfElements());
+            assertTrue(validCoupons.getContent().stream().anyMatch(couponDto -> couponDto.couponId().equals(couponId)));
+            assertTrue(validCoupons.getContent().stream().anyMatch(couponDto -> couponDto.couponId().equals(couponId2)));
         }
     }
-
     @Nested
     @Transactional
     class 쿠폰_검증 {
