@@ -44,6 +44,6 @@ public class Coupon {
     private List<CouponBox> couponBoxes = new ArrayList<>();
 
     public boolean validateMinPurchase(int amount) {
-        return minPurchase > amount;
+        return minPurchase <= amount;
     }
 }

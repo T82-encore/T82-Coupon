@@ -29,7 +29,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -209,128 +208,158 @@ class CouponServiceImplTest {
     @Nested
     @Transactional
     class 쿠폰_검증 {
-        LocalDate localDate = LocalDate.of(3000, 12, 31);
-        Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        String seatId1 = "1";
-        String seatId2 = "2";
-        String seatId3 = "3";
+
+        LocalDate futureDate = LocalDate.of(3000, 12, 31);
+        Date futureDateAsDate = Date.from(futureDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        LocalDate currentDate = LocalDate.now();
+        Date currentDateAsDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        String userId = "testUser";
+
 
         @Test
-        void 성공() throws ParseException {
-//          given
-            // 쿠폰 3개 생성
-            Coupon 쿠폰1 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰1").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(false).category(SPORTS).build());
-            Coupon 쿠폰2 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰2").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(true).category(SPORTS).build());
-            Coupon 쿠폰3 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰3").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(true).category(SPORTS).build());
-            // 쿠폰함에 3개 넣고
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰1, userId));
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰2, userId));
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰3, userId));
-            // CouponVerifyRequestDto 생성
-            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰1.getCouponId().toString(), 10000, userId),
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰2.getCouponId().toString(), 10000, userId),
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰3.getCouponId().toString(), 10000, userId)
-            );
-//            when
-            CouponVerifyResponseDto couponVerifyResponseDto = couponService.verifyCoupons(
-                    new CouponVerifyRequestDto(userId, couponUsages)
-            );//            then
-            assertEquals("OK", couponVerifyResponseDto.result());
-        }
-
-        @Test
-        void 중복_불가능_쿠폰_실패테스트() throws ParseException {
-//          given
-            // 쿠폰 3개 생성
-            Coupon 쿠폰1 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰1").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(false).category(SPORTS).build());
-            Coupon 쿠폰2 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰2").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(false).category(SPORTS).build());
-            // 쿠폰함에 3개 넣고
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰1, userId));
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰2, userId));
-            // CouponVerifyRequestDto 생성
-            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰1.getCouponId().toString(), 10000, seatId1),
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰2.getCouponId().toString(), 10000, seatId1)
-            );
-//            when & then
-            assertThrows(DuplicateCouponException.class, () -> {
-                couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages));
-            });
-        }
-
-        @Test
-        void 최소금액_실패테스트() throws ParseException {
-//          given
-            // 쿠폰 3개 생성
-            Coupon 쿠폰1 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰1").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(true).category(SPORTS).build());
-            Coupon 쿠폰2 = couponRepository.save(Coupon.builder().couponId(UUID.randomUUID()).couponName("쿠폰2").discountType(DiscountType.FIXED).discountValue(1000).validEnd(date).minPurchase(10000).duplicate(false).category(SPORTS).build());
-            // 쿠폰함에 3개 넣고
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰1, userId));
-            couponBoxRepository.save(CouponBox.toEntity(쿠폰2, userId));
-            // CouponVerifyRequestDto 생성
-            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰1.getCouponId().toString(), 1000, seatId1),
-                    new CouponVerifyRequestDto.CouponUsage(쿠폰1.getCouponId().toString(), 10000, seatId1)
-            );
-//            when & then
-            assertThrows(MinPurchaseException.class, () -> {
-                couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages));
-            });
-        }
-
-        @Test
-        void 쿠폰_만료_실패테스트() throws ParseException {
+        void 성공() {
             // given
-            LocalDate localDateNow = LocalDate.now(); // 현재 날짜
-            Date validDate = Date.from(localDateNow.atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-            // 상태를 만료된 것으로 설정한 쿠폰 생성
-            Coupon expiredCoupon = couponRepository.save(Coupon.builder()
+            Coupon coupon1 = couponRepository.save(Coupon.builder()
                     .couponId(UUID.randomUUID())
-                    .couponName("Expired Coupon")
-                    .discountType(DiscountType.FIXED)
+                    .couponName("쿠폰1")
                     .discountValue(1000)
-                    .validEnd(validDate)
-                    .minPurchase(1000)
-                    .duplicate(true)
-                    .category(Category.SPORTS)
-                    .build());
-
-            // 유효한 쿠폰 생성
-            Coupon validCoupon = couponRepository.save(Coupon.builder()
-                    .couponId(UUID.randomUUID())
-                    .couponName("Valid Coupon")
-                    .discountType(DiscountType.FIXED)
-                    .discountValue(1000)
-                    .validEnd(validDate)
-                    .minPurchase(1000)
+                    .validEnd(futureDateAsDate)
+                    .minPurchase(10000)
                     .duplicate(false)
                     .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
+                    .build());
+            Coupon coupon2 = couponRepository.save(Coupon.builder()
+                    .couponId(UUID.randomUUID())
+                    .couponName("쿠폰2")
+                    .discountValue(1000)
+                    .validEnd(futureDateAsDate)
+                    .minPurchase(10000)
+                    .duplicate(true)
+                    .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
+                    .build());
+            Coupon coupon3 = couponRepository.save(Coupon.builder()
+                    .couponId(UUID.randomUUID())
+                    .couponName("쿠폰3")
+                    .discountValue(1000)
+                    .validEnd(futureDateAsDate)
+                    .minPurchase(10000)
+                    .duplicate(true)
+                    .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
                     .build());
 
-            // 사용자의 쿠폰함에 쿠폰 추가
-            String userId = "testUser";
-            String seatId1 = "seat1";
-            couponBoxRepository.save(CouponBox.toEntity(expiredCoupon, userId));
-            couponBoxRepository.save(CouponBox.toEntity(validCoupon, userId));
+            couponBoxRepository.save(CouponBox.toEntity(coupon1, userId));
+            couponBoxRepository.save(CouponBox.toEntity(coupon2, userId));
+            couponBoxRepository.save(CouponBox.toEntity(coupon3, userId));
 
-            // CouponBox의 상태를 만료로 설정
-            CouponBox expiredCouponBox = couponBoxRepository.findByCouponIdAndUserId(expiredCoupon.getCouponId(), userId).get();
-            expiredCouponBox.setStatus(Status.EXPIRED); // 상태를 만료로 설정
-            couponBoxRepository.save(expiredCouponBox);
-
-            // CouponVerifyRequestDto 생성
             List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
-                    new CouponVerifyRequestDto.CouponUsage(expiredCoupon.getCouponId().toString(), 10000, seatId1),
-                    new CouponVerifyRequestDto.CouponUsage(expiredCoupon.getCouponId().toString(), 10000, seatId1)
+                    new CouponVerifyRequestDto.CouponUsage(List.of(coupon1.getCouponId().toString()), 10000),
+                    new CouponVerifyRequestDto.CouponUsage(List.of(coupon2.getCouponId().toString()), 10000),
+                    new CouponVerifyRequestDto.CouponUsage(List.of(coupon3.getCouponId().toString()), 10000)
+            );
+
+            // when
+            CouponVerifyResponseDto response = couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages));
+
+            // then
+            assertEquals("OK", response.result());
+        }
+
+
+        @Test
+        void 최소금액_실패테스트() {
+            // given
+            Coupon coupon = couponRepository.save(Coupon.builder()
+                    .couponId(UUID.randomUUID())
+                    .couponName("쿠폰1")
+                    .discountValue(1000)
+                    .validEnd(futureDateAsDate)
+                    .minPurchase(10000)
+                    .duplicate(true)
+                    .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
+                    .build());
+
+            couponBoxRepository.save(CouponBox.toEntity(coupon, userId));
+
+            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
+                    new CouponVerifyRequestDto.CouponUsage(List.of(coupon.getCouponId().toString()), 1000)
             );
 
             // when & then
-            assertThrows(ExpiredCouponException.class, () -> {
-                couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages));
-            });
+            assertThrows(MinPurchaseException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
         }
+        @Test
+        void 사용완료_쿠폰_실패_테스트() {
+            // given
+            Coupon coupon = couponRepository.save(Coupon.builder()
+                    .couponId(UUID.randomUUID())
+                    .couponName("사용 완료 쿠폰")
+                    .discountValue(1000)
+                    .validEnd(futureDateAsDate)
+                    .minPurchase(10000)
+                    .duplicate(true)
+                    .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
+                    .build());
+
+            // 쿠폰을 사용 완료 상태로 설정
+            CouponBox couponBox = CouponBox.toEntity(coupon, userId);
+            couponBox.setStatus(Status.USED); // 상태를 USED로 설정
+            couponBoxRepository.save(couponBox);
+
+            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
+                    new CouponVerifyRequestDto.CouponUsage(List.of(coupon.getCouponId().toString()), 10000)
+            );
+
+            // when & then
+            assertThrows(ExpiredCouponException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
+        }
+        @Test
+        void 쿠폰_만료_실패테스트() {
+            // given
+            Coupon expiredCoupon = couponRepository.save(Coupon.builder()
+                    .couponId(UUID.randomUUID())
+                    .couponName("Expired Coupon")
+                    .discountValue(1000)
+                    .validEnd(currentDateAsDate)
+                    .minPurchase(1000)
+                    .duplicate(true)
+                    .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
+                    .build());
+            Coupon validCoupon = couponRepository.save(Coupon.builder()
+                    .couponId(UUID.randomUUID())
+                    .couponName("Valid Coupon")
+                    .discountValue(1000)
+                    .validEnd(futureDateAsDate)
+                    .minPurchase(1000)
+                    .duplicate(false)
+                    .category(Category.SPORTS)
+                    .discountType(DiscountType.FIXED)
+                    .build());
+
+            couponBoxRepository.save(CouponBox.toEntity(expiredCoupon, userId));
+            couponBoxRepository.save(CouponBox.toEntity(validCoupon, userId));
+
+            CouponBox expiredCouponBox = couponBoxRepository.findByCouponIdAndUserId(expiredCoupon.getCouponId(), userId).orElseThrow();
+            expiredCouponBox.setStatus(Status.EXPIRED); // 상태를 만료로 설정
+            couponBoxRepository.save(expiredCouponBox);
+
+            List<CouponVerifyRequestDto.CouponUsage> couponUsages = List.of(
+                    new CouponVerifyRequestDto.CouponUsage(List.of(expiredCoupon.getCouponId().toString()), 10000)
+            );
+
+            // when & then
+            assertThrows(ExpiredCouponException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
+        }
+    }
+
+
+
+
         @Nested
         @Transactional
         class 결제시_쿠폰상태_변경_테스트 {
@@ -365,6 +394,6 @@ class CouponServiceImplTest {
                 assertTrue(updatedCouponBox.isPresent());
                 assertEquals(Status.USED, updatedCouponBox.get().getStatus()); // Validate that the coupon status is updated
             }
-        }
+
     }
 }

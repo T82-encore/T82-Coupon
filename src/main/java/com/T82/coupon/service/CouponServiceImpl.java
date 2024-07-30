@@ -22,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -83,38 +85,45 @@ public class CouponServiceImpl implements CouponService {
     /**
      * 사용가능한 쿠폰인지 검증
      */
+
     @Override
     @Transactional
     public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
-        Map<String,String> validateDuplicate = new HashMap<>();
-        req.coupons().forEach(couponReq -> {
-            Coupon coupon = getCouponBox(req.userId(), couponReq.couponId()).getId().getCoupon();
-            CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(req.coupons().get(0).couponId()),req.userId()).orElseThrow(CouponNotFoundException::new);
-            validateCoupon(validateDuplicate, couponReq, coupon, couponBox);
+        LocalDate today = LocalDate.now();
+        req.items().forEach(couponUsage -> {
+            couponUsage.couponIds().forEach(couponId -> {
+                Coupon coupon = validateIsUsed(req, couponId);
+                validateExpired(today, coupon);
+                validateMinPurchase(couponUsage, coupon);
+            });
         });
         return CouponVerifyResponseDto.from("OK");
     }
 
-    public void validateCoupon(Map<String, String> validateDuplicate, CouponVerifyRequestDto.CouponUsage couponReq, Coupon coupon, CouponBox couponBox) {
-        if (couponBox.getStatus().validateIsExpired()) throw new ExpiredCouponException(); // 상태 검증
-        if (coupon.validateMinPurchase(couponReq.beforeAmount())) throw new MinPurchaseException(); // 최소금액 검증
-        validateNonDuplicateCoupon(validateDuplicate, couponReq.seatId(), couponReq.couponId()); // 중복쿠폰 검증
+    private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
+        if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {
+            throw new MinPurchaseException(); // 최소사용금액 검사
+        }
     }
+
+    private static void validateExpired(LocalDate today, Coupon coupon) {
+        if (coupon.getValidEnd().before(Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant()))) {
+            throw new ExpiredCouponException(); // 유효기간 검사
+        }
+    }
+
+    private Coupon validateIsUsed(CouponVerifyRequestDto req, String couponId) {
+        CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId())
+                .orElseThrow(CouponNotFoundException::new);
+        if (couponBox.getStatus() != Status.UNUSED) throw new ExpiredCouponException(); // 사용여부 검사
+        return couponBox.getId().getCoupon();
+    }
+
 
     public CouponBox getCouponBox(String userId, String couponId) {
         return couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId)
                 .orElseThrow(CouponNotFoundException::new);
     }
 
-    public void validateNonDuplicateCoupon(Map<String,String> validMap, String seatId, String couponId) {
-        if(validMap.containsKey(seatId)){
-            Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(CouponNotFoundException::new);
-            if (!coupon.getDuplicate()) {
-                Coupon couponSaved = couponRepository.findById(UUID.fromString(validMap.get(seatId))).orElseThrow(CouponNotFoundException::new);
-                if(!couponSaved.getDuplicate()) throw new DuplicateCouponException();
-            }
-        }else{
-            validMap.put(seatId,couponId);
-        }
-    }
+
 }
