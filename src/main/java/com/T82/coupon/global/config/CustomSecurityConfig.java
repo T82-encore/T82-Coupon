@@ -31,7 +31,7 @@ public class CustomSecurityConfig {
         http.userDetailsService(authService);
 
         http.authorizeHttpRequests(req->
-                req.requestMatchers("/api/v1/**","/actuator/**")
+                req.requestMatchers("/api/v1/**","/actuator/**","/api/v1/coupons/verify")
                         .permitAll()
                         .anyRequest()
                         .authenticated()
