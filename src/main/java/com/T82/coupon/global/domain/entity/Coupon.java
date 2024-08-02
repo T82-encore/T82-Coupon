@@ -2,7 +2,6 @@ package com.T82.coupon.global.domain.entity;
 
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.DiscountType;
-import com.T82.coupon.global.domain.exception.MinPurchaseException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

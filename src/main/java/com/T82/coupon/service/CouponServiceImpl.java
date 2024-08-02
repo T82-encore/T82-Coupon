@@ -59,6 +59,7 @@ public class CouponServiceImpl implements CouponService {
      * 카테고리별로 발급받을 수 있는 쿠폰 반환
      */
     @Override
+    @CustomException(ErrorCode.COUPON_CATEGORY_NOT_FOUND)
     public Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest) {
         Page<Coupon> allByCategory = couponRepository.findAllByCategory(Category.from(category), pageRequest);
         return allByCategory.map(CouponResponseDto::from);

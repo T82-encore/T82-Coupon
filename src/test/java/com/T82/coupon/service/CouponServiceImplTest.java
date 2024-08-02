@@ -12,7 +12,6 @@ import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.DiscountType;
 import com.T82.coupon.global.domain.enums.Status;
-import com.T82.coupon.global.domain.exception.*;
 import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,9 +117,8 @@ class CouponServiceImplTest {
 
             // when
             Pageable pageable = PageRequest.of(0, 5); // 페이지 크기를 크게 지정하여 모든 결과를 가져오도록 함
-            CategoryNotFoundException categoryNotFoundException = assertThrows(CategoryNotFoundException.class, () -> couponService.getCouponsByCategory(String.valueOf(Category.from("hi")), pageable)); // 존재하지 않는 category값 전달
             // then
-            assertEquals("존재하지 않는 카테고리 입니다.", categoryNotFoundException.getMessage());
+            assertThrows(IllegalArgumentException.class, () -> couponService.getCouponsByCategory(String.valueOf(Category.from("hi")), pageable)); // 존재하지 않는 category값 전달
         }
     }
 
