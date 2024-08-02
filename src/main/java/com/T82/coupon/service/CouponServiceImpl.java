@@ -119,7 +119,7 @@ public class CouponServiceImpl implements CouponService {
 
     private Coupon validateIsUsed(CouponVerifyRequestDto req, String couponId) {
         CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId())
-                .orElseThrow(CouponNotFoundException::new);
+                .orElseThrow(IllegalArgumentException::new);
         if (couponBox.getStatus() != Status.UNUSED) throw new IllegalArgumentException(); // 사용여부 검사
         return couponBox.getId().getCoupon();
     }
