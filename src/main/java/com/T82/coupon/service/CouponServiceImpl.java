@@ -1,5 +1,7 @@
 package com.T82.coupon.service;
 
+import com.T82.common_exception.annotation.CustomException;
+import com.T82.common_exception.exception.ErrorCode;
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.request.UseCouponRequestDto;
@@ -67,8 +69,9 @@ public class CouponServiceImpl implements CouponService {
      * 쿠폰을 유저에게 지급
      */
     @Override
+    @CustomException(ErrorCode.COUPON_NOT_FOUND)
     public void giveCouponToUser(String couponId, UserDto userDto) {
-        Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(CouponNotFoundException::new);
+        Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(IllegalArgumentException::new);
         couponBoxRepository.save(CouponBox.toEntity(coupon, userDto.getId()));
     }
 
@@ -88,6 +91,7 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     @Transactional
+    @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
     public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
         LocalDate today = LocalDate.now();
         req.items().forEach(couponUsage -> {
@@ -100,29 +104,29 @@ public class CouponServiceImpl implements CouponService {
         return CouponVerifyResponseDto.from("OK");
     }
 
+
     private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
         if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {
-            throw new MinPurchaseException(); // 최소사용금액 검사
+            throw new IllegalArgumentException(); // 최소사용금액 검사
         }
     }
 
     private static void validateExpired(LocalDate today, Coupon coupon) {
         if (coupon.getValidEnd().before(Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant()))) {
-            throw new ExpiredCouponException(); // 유효기간 검사
+            throw new IllegalArgumentException(); // 유효기간 검사
         }
     }
 
     private Coupon validateIsUsed(CouponVerifyRequestDto req, String couponId) {
         CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId())
                 .orElseThrow(CouponNotFoundException::new);
-        if (couponBox.getStatus() != Status.UNUSED) throw new ExpiredCouponException(); // 사용여부 검사
+        if (couponBox.getStatus() != Status.UNUSED) throw new IllegalArgumentException(); // 사용여부 검사
         return couponBox.getId().getCoupon();
     }
 
-
     public CouponBox getCouponBox(String userId, String couponId) {
         return couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId)
-                .orElseThrow(CouponNotFoundException::new);
+                .orElseThrow(IllegalArgumentException::new);
     }
 
 
