@@ -1,7 +1,5 @@
 package com.T82.coupon.global.domain.enums;
 
-import com.T82.coupon.global.domain.exception.CategoryNotFoundException;
-
 public enum Category {
     MUSICAL,
     CONCERT,
@@ -14,7 +12,7 @@ public enum Category {
             case "CONCERT" -> Category.CONCERT;
             case "SPORTS" -> Category.SPORTS;
             case "ALL" -> Category.ALL;
-            default -> throw new CategoryNotFoundException();
+            default -> throw new IllegalArgumentException();
         };
     }
 }

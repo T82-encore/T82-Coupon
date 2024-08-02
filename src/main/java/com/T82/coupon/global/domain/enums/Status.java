@@ -1,6 +1,5 @@
 package com.T82.coupon.global.domain.enums;
 
-import com.T82.coupon.global.domain.exception.StatusNotFoundException;
 
 public enum Status {
     UNUSED,
@@ -12,7 +11,7 @@ public enum Status {
             case "UNUSED" -> Status.UNUSED;
             case "USED" -> Status.USED;
             case "EXPIRED" -> Status.EXPIRED;
-            default -> throw new StatusNotFoundException();
+            default -> throw new IllegalArgumentException();
         };
     }
 
