@@ -1,5 +1,6 @@
 package com.T82.coupon.service;
 
+import com.T82.common_exception.exception.CustomException;
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.request.UseCouponRequestDto;
@@ -158,7 +159,7 @@ class CouponServiceImplTest {
             UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
             // when & then
-            assertThrows(CouponNotFoundException.class, () -> {
+            assertThrows(CustomException.class, () -> {
                 couponService.giveCouponToUser(couponId, principal);
             });
         }
@@ -289,7 +290,7 @@ class CouponServiceImplTest {
             );
 
             // when & then
-            assertThrows(MinPurchaseException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
+            assertThrows(CustomException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
         }
         @Test
         void 사용완료_쿠폰_실패_테스트() {
@@ -315,7 +316,7 @@ class CouponServiceImplTest {
             );
 
             // when & then
-            assertThrows(ExpiredCouponException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
+            assertThrows(CustomException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
         }
         @Test
         void 쿠폰_만료_실패테스트() {
@@ -353,7 +354,7 @@ class CouponServiceImplTest {
             );
 
             // when & then
-            assertThrows(ExpiredCouponException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
+            assertThrows(CustomException.class, () -> couponService.verifyCoupons(new CouponVerifyRequestDto(userId, couponUsages)));
         }
     }
 
