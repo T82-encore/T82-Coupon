@@ -12,7 +12,6 @@ import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.Status;
-import com.T82.coupon.global.domain.exception.*;
 import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;
