@@ -2,6 +2,7 @@ package com.T82.coupon.service;
 
 import com.T82.common_exception.annotation.CustomException;
 import com.T82.common_exception.exception.ErrorCode;
+import com.T82.coupon.dto.request.CouponEventRequestDto;
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.request.UseCouponRequestDto;
@@ -13,6 +14,7 @@ import com.T82.coupon.global.domain.entity.CouponBox;
 import com.T82.coupon.global.domain.enums.Category;
 import com.T82.coupon.global.domain.enums.Status;
 import com.T82.coupon.global.domain.repository.CouponBoxRepository;
+import com.T82.coupon.global.domain.repository.CouponEventRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +36,7 @@ import java.util.*;
 public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
-
+    private final CouponEventRepository couponEventRepository;
     /**
      * 쿠폰 사용시 결제서비스 -> 쿠폰서비스
      */
@@ -104,6 +106,15 @@ public class CouponServiceImpl implements CouponService {
         return CouponVerifyResponseDto.from("OK");
     }
 
+    /**
+     * 쿠폰 이벤트 생성 (쿠폰+이벤트 생성)
+     */
+    @Override
+    @Transactional
+    public void createCouponEvent(CouponEventRequestDto req) {
+        Coupon savedCoupon = couponRepository.save(req.toCouponEntity(req));
+        couponEventRepository.save(req.toCouponEventEntity(req,savedCoupon));
+    }
 
     private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
         if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {
@@ -128,6 +139,8 @@ public class CouponServiceImpl implements CouponService {
         return couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId)
                 .orElseThrow(IllegalArgumentException::new);
     }
+
+
 
 
 }

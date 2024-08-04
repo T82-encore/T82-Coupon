@@ -1,5 +1,6 @@
 package com.T82.coupon.service;
 
+import com.T82.coupon.dto.request.CouponEventRequestDto;
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
@@ -20,4 +21,6 @@ public interface CouponService {
     Page<CouponResponseDto> getValidCoupons(Pageable pageRequest,UserDto userDto);
 
     CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req);
+
+    void createCouponEvent(CouponEventRequestDto req);
 }

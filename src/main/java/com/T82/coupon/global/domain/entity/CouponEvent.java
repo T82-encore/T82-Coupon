@@ -19,7 +19,7 @@ import java.util.Date;
 public class CouponEvent {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "COUPON_EVENT_ID")
-    private String couponEventId;
+    private Long couponEventId;
     @Column(name = "TOTAL_COUPON")
     private int totalCoupon;
     @Column(name = "REST_COUPON")
