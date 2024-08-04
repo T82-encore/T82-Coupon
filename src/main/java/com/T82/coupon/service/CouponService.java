@@ -22,5 +22,5 @@ public interface CouponService {
 
     CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req);
 
-    void createCouponEvent(CouponEventRequestDto req);
+
 }

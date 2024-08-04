@@ -32,7 +32,6 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-//verifyCouponService
 public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
@@ -106,15 +105,8 @@ public class CouponServiceImpl implements CouponService {
         return CouponVerifyResponseDto.from("OK");
     }
 
-    /**
-     * 쿠폰 이벤트 생성 (쿠폰+이벤트 생성)
-     */
-    @Override
-    @Transactional
-    public void createCouponEvent(CouponEventRequestDto req) {
-        Coupon savedCoupon = couponRepository.save(req.toCouponEntity(req));
-        couponEventRepository.save(req.toCouponEventEntity(req,savedCoupon));
-    }
+
+
 
     private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
         if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {
