@@ -42,6 +42,10 @@ public class Coupon {
     @Builder.Default
     private List<CouponBox> couponBoxes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CouponEvent> couponEvents = new ArrayList<>();
+
     public boolean validateMinPurchase(int amount) {
         return minPurchase <= amount;
     }

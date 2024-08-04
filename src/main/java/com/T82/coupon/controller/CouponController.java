@@ -1,5 +1,6 @@
 package com.T82.coupon.controller;
 
+import com.T82.coupon.dto.request.CouponEventRequestDto;
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
@@ -63,5 +64,14 @@ public class CouponController {
     @ResponseStatus(HttpStatus.OK)
     public CouponVerifyResponseDto verifyCoupons(@RequestBody CouponVerifyRequestDto req) {
         return couponService.verifyCoupons(req);
+    }
+
+    /**
+     * 쿠폰 이벤트 생성 (쿠폰+쿠폰이벤트 생성)
+     */
+    @PostMapping("/events")
+    @ResponseStatus(HttpStatus.OK)
+    public void createCouponEvent(@RequestBody CouponEventRequestDto req) {
+        couponService.createCouponEvent(req);
     }
 }
