@@ -16,7 +16,7 @@ public interface CouponService {
 
     Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest);
 
-    void giveCouponToUser(String couponId, UserDto userDto);
+    void giveCouponToUser(String couponId, String userId);
 
     Page<CouponResponseDto> getValidCoupons(Pageable pageRequest,UserDto userDto);
 

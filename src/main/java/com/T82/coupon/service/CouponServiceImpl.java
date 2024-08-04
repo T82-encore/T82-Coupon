@@ -71,9 +71,9 @@ public class CouponServiceImpl implements CouponService {
      */
     @Override
     @CustomException(ErrorCode.COUPON_NOT_FOUND)
-    public void giveCouponToUser(String couponId, UserDto userDto) {
+    public void giveCouponToUser(String couponId, String userId) {
         Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(IllegalArgumentException::new);
-        couponBoxRepository.save(CouponBox.toEntity(coupon, userDto.getId()));
+        couponBoxRepository.save(CouponBox.toEntity(coupon, userId));
     }
 
     /**

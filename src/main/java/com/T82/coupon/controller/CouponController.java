@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -40,7 +42,7 @@ public class CouponController {
     @PostMapping("/{couponId}")
     @ResponseStatus(HttpStatus.OK)
     public void giveCouponToUser(@AuthenticationPrincipal UserDto userDto, @PathVariable(name = "couponId") String couponId){
-        couponService.giveCouponToUser(couponId,userDto);
+        couponService.giveCouponToUser(couponId,userDto.getId());
     }
     /**
      * 유저가 보유한 사용기한이 지나지 않은 쿠폰 내역 가져오기(10개)
@@ -76,4 +78,11 @@ public class CouponController {
     public void createCouponEvent(@RequestBody CouponEventRequestDto req) {
         couponEventService.createCouponEvent(req);
     }
+
+    @PostMapping("/issue")
+    @ResponseStatus(HttpStatus.OK)
+    public void issueCoupon(@AuthenticationPrincipal UserDto userDto, @RequestBody Map<String, String> req) {
+        couponEventService.issueCoupon(req.get("couponId"), userDto.getId());
+    }
+
 }
