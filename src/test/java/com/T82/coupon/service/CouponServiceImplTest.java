@@ -158,7 +158,7 @@ class CouponServiceImplTest {
 
             // when & then
             assertThrows(CustomException.class, () -> {
-                couponService.giveCouponToUser(couponId, principal);
+                couponService.giveCouponToUser(couponId, principal.getId());
             });
         }
     }

@@ -79,10 +79,12 @@ public class CouponController {
         couponEventService.createCouponEvent(req);
     }
 
-    @PostMapping("/issue")
+    /**
+     * 이벤트 쿠폰 발급
+     */
+    @PostMapping("/events/issue")
     @ResponseStatus(HttpStatus.OK)
     public void issueCoupon(@AuthenticationPrincipal UserDto userDto, @RequestBody Map<String, String> req) {
         couponEventService.issueCoupon(req.get("couponId"), userDto.getId());
     }
-
 }
