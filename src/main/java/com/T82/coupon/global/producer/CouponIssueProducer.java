@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CouponIssueProducer {
     private final KafkaTemplate<String, IssueCouponDto> kafkaTemplate;
-
     public void issueCoupon(IssueCouponDto req){
         kafkaTemplate.send("issueCoupon",req);
     }
-
-
 }
