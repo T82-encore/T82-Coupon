@@ -4,12 +4,11 @@ import com.T82.common_exception.annotation.CustomException;
 import com.T82.common_exception.exception.ErrorCode;
 import com.T82.coupon.dto.request.CouponEventRequestDto;
 import com.T82.coupon.global.domain.dto.IssueCouponDto;
-import com.T82.coupon.global.domain.dto.UserDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponEvent;
+import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponEventRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
-import com.T82.coupon.global.domain.repository.CouponUserRepository;
 import com.T82.coupon.global.producer.CouponIssueProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ import java.util.UUID;
 public class CouponEventServiceImpl implements CouponEventService{
     private final CouponEventRepository couponEventRepository;
     private final CouponRepository couponRepository;
-    private final CouponUserRepository couponUserRepository;
+    private final CouponBoxRepository couponBoxRepository;
     private final CouponService couponService;
     private final CouponIssueProducer couponIssueProducer;
 
@@ -44,10 +43,10 @@ public class CouponEventServiceImpl implements CouponEventService{
      */
     @Override
     @Transactional
+    @CustomException(ErrorCode.COUPON_NOT_FOUND)
     public void issueCoupon(String couponId,String userId){
-        Long add = couponUserRepository.add(userId);
-        if(add!=1) throw new IllegalArgumentException();
         CouponEvent byCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(couponId)).orElseThrow(IllegalArgumentException::new);
+        if(couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId),userId).isPresent()) throw new IllegalArgumentException();
         if(byCouponId.getRestCoupon()<=0) throw new IllegalArgumentException();
         couponIssueProducer.issueCoupon(IssueCouponDto.toDto(couponId,userId));
     }
