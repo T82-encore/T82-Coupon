@@ -32,7 +32,6 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-//verifyCouponService
 public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
@@ -72,9 +71,9 @@ public class CouponServiceImpl implements CouponService {
      */
     @Override
     @CustomException(ErrorCode.COUPON_NOT_FOUND)
-    public void giveCouponToUser(String couponId, UserDto userDto) {
+    public void giveCouponToUser(String couponId, String userId) {
         Coupon coupon = couponRepository.findById(UUID.fromString(couponId)).orElseThrow(IllegalArgumentException::new);
-        couponBoxRepository.save(CouponBox.toEntity(coupon, userDto.getId()));
+        couponBoxRepository.save(CouponBox.toEntity(coupon, userId));
     }
 
     /**
@@ -106,15 +105,8 @@ public class CouponServiceImpl implements CouponService {
         return CouponVerifyResponseDto.from("OK");
     }
 
-    /**
-     * 쿠폰 이벤트 생성 (쿠폰+이벤트 생성)
-     */
-    @Override
-    @Transactional
-    public void createCouponEvent(CouponEventRequestDto req) {
-        Coupon savedCoupon = couponRepository.save(req.toCouponEntity(req));
-        couponEventRepository.save(req.toCouponEventEntity(req,savedCoupon));
-    }
+
+
 
     private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
         if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {

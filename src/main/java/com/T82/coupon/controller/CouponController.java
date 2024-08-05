@@ -6,6 +6,7 @@ import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
 import com.T82.coupon.dto.response.CouponVerifyResponseDto;
 import com.T82.coupon.global.domain.dto.UserDto;
+import com.T82.coupon.service.CouponEventService;
 import com.T82.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,12 +17,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/coupons")
 public class CouponController {
     private final CouponService couponService;
+    private final CouponEventService couponEventService;
 
     /**
      * 쿠폰 생성
@@ -38,7 +42,7 @@ public class CouponController {
     @PostMapping("/{couponId}")
     @ResponseStatus(HttpStatus.OK)
     public void giveCouponToUser(@AuthenticationPrincipal UserDto userDto, @PathVariable(name = "couponId") String couponId){
-        couponService.giveCouponToUser(couponId,userDto);
+        couponService.giveCouponToUser(couponId,userDto.getId());
     }
     /**
      * 유저가 보유한 사용기한이 지나지 않은 쿠폰 내역 가져오기(10개)
@@ -72,6 +76,15 @@ public class CouponController {
     @PostMapping("/events")
     @ResponseStatus(HttpStatus.OK)
     public void createCouponEvent(@RequestBody CouponEventRequestDto req) {
-        couponService.createCouponEvent(req);
+        couponEventService.createCouponEvent(req);
+    }
+
+    /**
+     * 이벤트 쿠폰 발급
+     */
+    @PostMapping("/events/issue")
+    @ResponseStatus(HttpStatus.OK)
+    public void issueCoupon(@AuthenticationPrincipal UserDto userDto, @RequestBody Map<String, String> req) {
+        couponEventService.issueCoupon(req.get("couponId"), userDto.getId());
     }
 }

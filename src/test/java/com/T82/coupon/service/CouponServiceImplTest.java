@@ -142,7 +142,7 @@ class CouponServiceImplTest {
             UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
             // when
-            couponService.giveCouponToUser(couponId.toString(), principal);
+            couponService.giveCouponToUser(couponId.toString(), principal.getId());
 
             // then
             CouponBox savedCouponBox = couponBoxRepository.findAll().get(0);
@@ -158,7 +158,7 @@ class CouponServiceImplTest {
 
             // when & then
             assertThrows(CustomException.class, () -> {
-                couponService.giveCouponToUser(couponId, principal);
+                couponService.giveCouponToUser(couponId, principal.getId());
             });
         }
     }
@@ -192,8 +192,8 @@ class CouponServiceImplTest {
             );
             Coupon coupon2 = couponRepository.saveAndFlush(couponRequestDto2.toEntity(couponRequestDto2));
             UUID couponId2 = coupon2.getCouponId();
-            couponService.giveCouponToUser(couponId.toString(), principal);
-            couponService.giveCouponToUser(couponId2.toString(), principal);
+            couponService.giveCouponToUser(couponId.toString(), principal.getId());
+            couponService.giveCouponToUser(couponId2.toString(), principal.getId());
 
             Pageable pageable = PageRequest.of(0, 2);
             // when
