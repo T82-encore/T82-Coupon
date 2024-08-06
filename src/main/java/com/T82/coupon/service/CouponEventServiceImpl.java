@@ -3,6 +3,7 @@ package com.T82.coupon.service;
 import com.T82.common_exception.annotation.CustomException;
 import com.T82.common_exception.exception.ErrorCode;
 import com.T82.coupon.dto.request.CouponEventRequestDto;
+import com.T82.coupon.dto.response.CouponResponseDto;
 import com.T82.coupon.global.domain.dto.IssueCouponDto;
 import com.T82.coupon.global.domain.entity.Coupon;
 import com.T82.coupon.global.domain.entity.CouponEvent;
@@ -16,7 +17,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -54,13 +57,29 @@ public class CouponEventServiceImpl implements CouponEventService{
     /**
      * 쿠폰 이벤트에서 쿠폰 발급 (From Kafka)
      */
-    @KafkaListener(topics = "issueCoupon")
+    @KafkaListener(topics = "issueCoupon", groupId = "couponEvent-group")
     @Transactional
     @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
     public void issueCouponFromEvent(IssueCouponDto req) {
+        log.error("come{}",req.toString());
         couponService.giveCouponToUser(req.couponId(),req.userId());
         CouponEvent byCouponCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(req.couponId())).orElseThrow(IllegalArgumentException::new);
         if (byCouponCouponId.getRestCoupon()<=0) throw new IllegalArgumentException();
         byCouponCouponId.subRestCoupon();// 남은 쿠폰 1차감
     }
+
+    /**
+     * 이벤트 진행중인 쿠폰들 반환
+     */
+    @Transactional
+    @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
+    public List<CouponResponseDto> getEventCoupons() {
+        List<Coupon> eventCoupons = couponRepository.findEventCoupons();
+        return eventCoupons.stream().map(CouponResponseDto::from).toList();
+    }
+    /**
+     * 조건
+     * 1. event시작 시간이 현재 시간보다 이후인 이벤트만
+     * 2. 쿠폰 이벤트에 있는 couponId를 보고 coupons 엔티티에서 쿠폰 정보를 가져와야함
+     */
 }

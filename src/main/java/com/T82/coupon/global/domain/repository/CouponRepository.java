@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface CouponRepository extends JpaRepository<Coupon, UUID> {
     @Query("select c from Coupon c where c.category=:category and c.validEnd > current_date")
     Page<Coupon> findAllByCategory(@Param("category") Category category, Pageable pageRequest);
 
-
+    @Query("select distinct ce.coupon from CouponEvent ce where  ce.eventStartTime < current_date")
+    List<Coupon> findEventCoupons();
 }
