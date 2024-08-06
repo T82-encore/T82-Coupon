@@ -14,12 +14,17 @@ import com.T82.coupon.global.producer.CouponIssueProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.DltStrategy;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static org.springframework.kafka.retrytopic.TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE;
 
 @Service
 @Slf4j
@@ -57,6 +62,13 @@ public class CouponEventServiceImpl implements CouponEventService{
     /**
      * 쿠폰 이벤트에서 쿠폰 발급 (From Kafka)
      */
+    @RetryableTopic(
+            attempts = "3",
+            backoff = @Backoff(delay = 10 * 1000, multiplier = 3, maxDelay = 10 * 60 * 1000),
+            topicSuffixingStrategy = SUFFIX_WITH_INDEX_VALUE,
+            dltStrategy = DltStrategy.ALWAYS_RETRY_ON_ERROR,
+            include = IllegalArgumentException.class
+    )
     @KafkaListener(topics = "issueCoupon", groupId = "couponEvent-group")
     @Transactional
     @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
