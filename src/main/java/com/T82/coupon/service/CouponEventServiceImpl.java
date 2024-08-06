@@ -45,7 +45,6 @@ public class CouponEventServiceImpl implements CouponEventService{
         Coupon savedCoupon = couponRepository.save(req.toCouponEntity(req));
         couponEventRepository.save(req.toCouponEventEntity(req,savedCoupon));
     }
-
     /**
      * 쿠폰 이벤트에서 쿠폰 발급 실제 로직(To Kafka)
      */
@@ -58,7 +57,6 @@ public class CouponEventServiceImpl implements CouponEventService{
         if(byCouponId.getRestCoupon()<=0) throw new IllegalArgumentException();
         couponIssueProducer.issueCoupon(IssueCouponDto.toDto(couponId,userId));
     }
-
     /**
      * 쿠폰 이벤트에서 쿠폰 발급 (From Kafka)
      */
@@ -69,7 +67,7 @@ public class CouponEventServiceImpl implements CouponEventService{
             dltStrategy = DltStrategy.ALWAYS_RETRY_ON_ERROR,
             include = IllegalArgumentException.class
     )
-    @KafkaListener(topics = "issueCoupon", groupId = "couponEvent-group")
+    @KafkaListener(topics = "issueCoupon", groupId = "eventCoupon-group")
     @Transactional
     @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
     public void issueCouponFromEvent(IssueCouponDto req) {
@@ -79,7 +77,6 @@ public class CouponEventServiceImpl implements CouponEventService{
         if (byCouponCouponId.getRestCoupon()<=0) throw new IllegalArgumentException();
         byCouponCouponId.subRestCoupon();// 남은 쿠폰 1차감
     }
-
     /**
      * 이벤트 진행중인 쿠폰들 반환
      */
@@ -89,9 +86,4 @@ public class CouponEventServiceImpl implements CouponEventService{
         List<Coupon> eventCoupons = couponRepository.findEventCoupons();
         return eventCoupons.stream().map(CouponResponseDto::from).toList();
     }
-    /**
-     * 조건
-     * 1. event시작 시간이 현재 시간보다 이후인 이벤트만
-     * 2. 쿠폰 이벤트에 있는 couponId를 보고 coupons 엔티티에서 쿠폰 정보를 가져와야함
-     */
 }
