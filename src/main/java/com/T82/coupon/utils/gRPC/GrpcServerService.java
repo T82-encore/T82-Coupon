@@ -29,6 +29,7 @@ public class GrpcServerService extends CouponGrpc.CouponImplBase{
                             .setMessage("쿠폰 검증에 성공하였습니다.")
                             .build()
             );
+            responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onNext(
                     VerifyReply.newBuilder()
@@ -36,6 +37,7 @@ public class GrpcServerService extends CouponGrpc.CouponImplBase{
                             .setMessage(e.getMessage())
                     .build()
             );
+            responseObserver.onCompleted();
         }
 
     }
