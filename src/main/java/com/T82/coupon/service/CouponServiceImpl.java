@@ -2,7 +2,6 @@ package com.T82.coupon.service;
 
 import com.T82.common_exception.annotation.CustomException;
 import com.T82.common_exception.exception.ErrorCode;
-import com.T82.coupon.dto.request.CouponEventRequestDto;
 import com.T82.coupon.dto.request.CouponRequestDto;
 import com.T82.coupon.dto.request.CouponVerifyRequestDto;
 import com.T82.coupon.dto.request.UseCouponRequestDto;
@@ -39,7 +38,7 @@ public class CouponServiceImpl implements CouponService {
     /**
      * 쿠폰 사용시 결제서비스 -> 쿠폰서비스
      */
-    @KafkaListener(topics = "couponUsed")
+    @KafkaListener(topics = "couponUsed",groupId = "coupon-group")
     @Transactional
     public void useCoupons(UseCouponRequestDto req) {
         req.couponIds().stream().distinct().forEach(couponId -> {
@@ -131,8 +130,4 @@ public class CouponServiceImpl implements CouponService {
         return couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId)
                 .orElseThrow(IllegalArgumentException::new);
     }
-
-
-
-
 }

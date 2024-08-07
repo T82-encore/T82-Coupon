@@ -83,14 +83,14 @@ public class CouponConcurrencyTest {
 
         when(couponEventRepository.findByCoupon_CouponId(any(UUID.class)))
                 .thenReturn(Optional.of(couponEvent));
+
         when(couponBoxRepository.findByCouponIdAndUserId(any(UUID.class), anyString()))
-                .thenReturn(Optional.of(new CouponBox()));
+                .thenReturn(Optional.empty());
 
         couponEventServiceImpl.issueCoupon(couponId, userId);
 
         verify(couponIssueProducer).issueCoupon(any(IssueCouponDto.class));
     }
-
     @Test
     void issueCouponFromEvent() {
         String couponId = coupon.getCouponId().toString();

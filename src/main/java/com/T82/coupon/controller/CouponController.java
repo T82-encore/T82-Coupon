@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -86,5 +87,13 @@ public class CouponController {
     @ResponseStatus(HttpStatus.OK)
     public void issueCoupon(@AuthenticationPrincipal UserDto userDto, @RequestBody Map<String, String> req) {
         couponEventService.issueCoupon(req.get("couponId"), userDto.getId());
+    }
+    /**
+     * 이벤트 진행중인 쿠폰 반환
+     */
+    @GetMapping("/events")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CouponResponseDto> getEvnetCoupons() {
+        return couponEventService.getEventCoupons();
     }
 }
