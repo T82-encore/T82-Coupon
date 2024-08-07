@@ -35,7 +35,7 @@ import java.util.*;
 public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponBoxRepository couponBoxRepository;
-    private final CouponEventRepository couponEventRepository;
+//    private final CouponEventRepository couponEventRepository;
     /**
      * 쿠폰 사용시 결제서비스 -> 쿠폰서비스
      */
@@ -90,42 +90,42 @@ public class CouponServiceImpl implements CouponService {
      * 사용가능한 쿠폰인지 검증
      */
 
-    @Override
-    @Transactional
-    @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
-    public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
-        LocalDate today = LocalDate.now();
-        req.items().forEach(couponUsage -> {
-            couponUsage.couponIds().forEach(couponId -> {
-                Coupon coupon = validateIsUsed(req, couponId);
-                validateExpired(today, coupon);
-                validateMinPurchase(couponUsage, coupon);
-            });
-        });
-        return CouponVerifyResponseDto.from("OK");
-    }
+//    @Override
+//    @Transactional
+//    @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
+//    public CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req) {
+//        LocalDate today = LocalDate.now();
+//        req.items().forEach(couponUsage -> {
+//            couponUsage.couponIds().forEach(couponId -> {
+//                Coupon coupon = validateIsUsed(req, couponId);
+//                validateExpired(today, coupon);
+//                validateMinPurchase(couponUsage, coupon);
+//            });
+//        });
+//        return CouponVerifyResponseDto.from("OK");
+//    }
 
 
 
 
-    private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
-        if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {
-            throw new IllegalArgumentException(); // 최소사용금액 검사
-        }
-    }
+//    private static void validateMinPurchase(CouponVerifyRequestDto.CouponUsage couponUsage, Coupon coupon) {
+//        if (!coupon.validateMinPurchase(couponUsage.beforeAmount())) {
+//            throw new IllegalArgumentException(); // 최소사용금액 검사
+//        }
+//    }
 
-    private static void validateExpired(LocalDate today, Coupon coupon) {
-        if (coupon.getValidEnd().before(Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant()))) {
-            throw new IllegalArgumentException(); // 유효기간 검사
-        }
-    }
+//    private static void validateExpired(LocalDate today, Coupon coupon) {
+//        if (coupon.getValidEnd().before(Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant()))) {
+//            throw new IllegalArgumentException(); // 유효기간 검사
+//        }
+//    }
 
-    private Coupon validateIsUsed(CouponVerifyRequestDto req, String couponId) {
-        CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId())
-                .orElseThrow(IllegalArgumentException::new);
-        if (couponBox.getStatus() != Status.UNUSED) throw new IllegalArgumentException(); // 사용여부 검사
-        return couponBox.getId().getCoupon();
-    }
+//    private Coupon validateIsUsed(CouponVerifyRequestDto req, String couponId) {
+//        CouponBox couponBox = couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), req.userId())
+//                .orElseThrow(IllegalArgumentException::new);
+//        if (couponBox.getStatus() != Status.UNUSED) throw new IllegalArgumentException(); // 사용여부 검사
+//        return couponBox.getId().getCoupon();
+//    }
 
     public CouponBox getCouponBox(String userId, String couponId) {
         return couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId), userId)
