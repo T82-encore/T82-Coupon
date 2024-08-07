@@ -65,11 +65,11 @@ public class CouponController {
     /**
      * 사용가능한 쿠폰인지 검증 (결제 서비스에서 호출)
      */
-    @PostMapping("/verify")
-    @ResponseStatus(HttpStatus.OK)
-    public CouponVerifyResponseDto verifyCoupons(@RequestBody CouponVerifyRequestDto req) {
-        return couponService.verifyCoupons(req);
-    }
+//    @PostMapping("/verify")
+//    @ResponseStatus(HttpStatus.OK)
+//    public CouponVerifyResponseDto verifyCoupons(@RequestBody CouponVerifyRequestDto req) {
+//        return couponService.verifyCoupons(req);
+//    }
 
     /**
      * 쿠폰 이벤트 생성 (쿠폰+쿠폰이벤트 생성)
