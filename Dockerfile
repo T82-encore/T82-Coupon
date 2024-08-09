@@ -7,4 +7,4 @@ RUN ["java","-version"]
 #ENV profiles prod
 # run이 되면 이 명령어들을 실행하겠다
 CMD ["java","-jar","-Dspring.profiles.active=${profiles}","app.jar"]
-EXPOSE 8080
+EXPOSE 8080 9090

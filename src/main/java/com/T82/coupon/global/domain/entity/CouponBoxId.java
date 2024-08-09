@@ -16,7 +16,7 @@ public class CouponBoxId implements Serializable {
     @Column(name = "USER_ID")
     private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "COUPON_ID", nullable = false)
     private Coupon coupon;
 

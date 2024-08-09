@@ -20,7 +20,7 @@ public interface CouponService {
 
     Page<CouponResponseDto> getValidCoupons(Pageable pageRequest,UserDto userDto);
 
-//    CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req);
+    CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req);
 
 
 }

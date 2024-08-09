@@ -1,7 +1,9 @@
 package com.T82.coupon.service;
 
 import com.T82.common_exception.annotation.CustomException;
+import com.T82.common_exception.annotation.ExecutionTimeLog;
 import com.T82.common_exception.exception.ErrorCode;
+import com.T82.common_exception.exception.coupon.*;
 import com.T82.coupon.dto.request.CouponEventRequestDto;
 import com.T82.coupon.dto.response.CouponResponseDto;
 import com.T82.coupon.global.domain.dto.IssueCouponDto;
@@ -22,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.springframework.kafka.retrytopic.TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE;
 
@@ -41,6 +42,7 @@ public class CouponEventServiceImpl implements CouponEventService{
      */
     @Override
     @Transactional
+    @CustomException(ErrorCode.FAILED_GENERATE_COUPON)
     public void createCouponEvent(CouponEventRequestDto req) {
         Coupon savedCoupon = couponRepository.save(req.toCouponEntity(req));
         couponEventRepository.save(req.toCouponEventEntity(req,savedCoupon));
@@ -50,11 +52,11 @@ public class CouponEventServiceImpl implements CouponEventService{
      */
     @Override
     @Transactional
-    @CustomException(ErrorCode.COUPON_NOT_FOUND)
+    @CustomException(ErrorCode.FAILED_ISSUE_COUPON)
     public void issueCoupon(String couponId,String userId){
-        CouponEvent byCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(couponId)).orElseThrow(IllegalArgumentException::new);
-        if(couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId),userId).isPresent()) throw new IllegalArgumentException();
-        if(byCouponId.getRestCoupon()<=0) throw new IllegalArgumentException();
+        CouponEvent byCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(couponId)).orElseThrow(NotFoundEventCouponException::new);
+        if(couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId),userId).isPresent()) throw new CouponAlreadyIssuedException(); //중복 발급 불가
+        if(byCouponId.getRestCoupon()<=0) throw new NotFoundRemainingCouponException();
         couponIssueProducer.issueCoupon(IssueCouponDto.toDto(couponId,userId));
     }
     /**
@@ -65,23 +67,22 @@ public class CouponEventServiceImpl implements CouponEventService{
             backoff = @Backoff(delay = 10 * 1000, multiplier = 3, maxDelay = 10 * 60 * 1000),
             topicSuffixingStrategy = SUFFIX_WITH_INDEX_VALUE,
             dltStrategy = DltStrategy.ALWAYS_RETRY_ON_ERROR,
-            include = IllegalArgumentException.class
+            include = FailedIssueCouponException.class
     )
     @KafkaListener(topics = "issueCoupon", groupId = "eventCoupon-group")
     @Transactional
-    @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
+    @CustomException(ErrorCode.FAILED_ISSUE_COUPON)
     public void issueCouponFromEvent(IssueCouponDto req) {
-        log.error("come{}",req.toString());
         couponService.giveCouponToUser(req.couponId(),req.userId());
-        CouponEvent byCouponCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(req.couponId())).orElseThrow(IllegalArgumentException::new);
-        if (byCouponCouponId.getRestCoupon()<=0) throw new IllegalArgumentException();
+        CouponEvent byCouponCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(req.couponId())).orElseThrow(CouponNotFoundException::new); //쿠폰존재x
+        if (byCouponCouponId.getRestCoupon()<=0) throw new NotFoundRemainingCouponException();
         byCouponCouponId.subRestCoupon();// 남은 쿠폰 1차감
     }
     /**
      * 이벤트 진행중인 쿠폰들 반환
      */
     @Transactional
-    @CustomException(ErrorCode.COUPON_VALIDATE_FAILED)
+    @CustomException(ErrorCode.NOT_FOUND_EVENT_COUPON)
     public List<CouponResponseDto> getEventCoupons() {
         List<Coupon> eventCoupons = couponRepository.findEventCoupons();
         return eventCoupons.stream().map(CouponResponseDto::from).toList();
