@@ -46,21 +46,20 @@ public class CouponController {
         couponService.giveCouponToUser(couponId,userDto.getId());
     }
     /**
-     * 유저가 보유한 사용기한이 지나지 않은 쿠폰 내역 가져오기(10개)
+     * 유저가 보유한 사용기한이 지나지 않은 쿠폰 내역 가져오기
      */
     @GetMapping("/valid")
     @ResponseStatus(HttpStatus.OK)
-    public Page<CouponResponseDto> getValidCoupons(@AuthenticationPrincipal UserDto userDto,@PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
-        return couponService.getValidCoupons(pageRequest,userDto);
+    public List<CouponResponseDto> getValidCoupons(@AuthenticationPrincipal UserDto userDto){
+        return couponService.getValidCoupons(userDto);
     }
     /**
      * 카테고리별로 쿠폰 가져오기(페이징 5개씩)
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<CouponResponseDto> getCouponsByCategory(@RequestParam(value = "category", required = false) String category,
-                                                        @PageableDefault(size =5, page = 0,sort = "validEnd", direction = Sort.Direction.ASC) Pageable pageRequest){
-        return couponService.getCouponsByCategory(category,pageRequest);
+    public List<CouponResponseDto> getCouponsByCategory(@RequestParam(value = "category", required = false) String category){
+        return couponService.getCouponsByCategory(category);
     }
     /**
      * 사용가능한 쿠폰인지 검증 (결제 서비스에서 호출)

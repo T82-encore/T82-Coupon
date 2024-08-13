@@ -4,6 +4,7 @@ public enum Category {
     MUSICAL,
     CONCERT,
     SPORTS,
+    PEDOMETER,
     ALL;
     public static Category from(String str){
         str = str.toUpperCase();
@@ -12,6 +13,7 @@ public enum Category {
             case "CONCERT" -> Category.CONCERT;
             case "SPORTS" -> Category.SPORTS;
             case "ALL" -> Category.ALL;
+            case "PEDOMETER" -> Category.PEDOMETER;
             default -> throw new IllegalArgumentException();
         };
     }

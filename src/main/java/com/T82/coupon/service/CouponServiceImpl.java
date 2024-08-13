@@ -20,8 +20,6 @@ import com.T82.coupon.global.domain.repository.CouponBoxRepository;
 import com.T82.coupon.global.domain.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,9 +60,9 @@ public class CouponServiceImpl implements CouponService {
      */
     @Override
     @CustomException(ErrorCode.COUPON_NOT_FOUND)
-    public Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest) {
-        Page<Coupon> allByCategory = couponRepository.findAllByCategory(Category.from(category), pageRequest);
-        return allByCategory.map(CouponResponseDto::from);
+    public List<CouponResponseDto> getCouponsByCategory(String category) {
+        List<Coupon> allByCategory = couponRepository.findAllByCategory(Category.from(category));
+        return allByCategory.stream().map(CouponResponseDto::from).toList();
     }
 
     /**
@@ -82,9 +80,9 @@ public class CouponServiceImpl implements CouponService {
      */
     @Override
     @CustomException(ErrorCode.COUPON_NOT_FOUND)
-    public Page<CouponResponseDto> getValidCoupons(Pageable pageable,UserDto userDto) {
-        Page<Coupon> allByIds = couponBoxRepository.findAllByUserId(userDto.getId(), pageable);
-        return allByIds.map(CouponResponseDto::from);
+    public List<CouponResponseDto> getValidCoupons(UserDto userDto) {
+        List<Coupon> allByIds = couponBoxRepository.findAllByUserId(userDto.getId());
+        return allByIds.stream().map(CouponResponseDto::from).toList();
     }
 
     /**

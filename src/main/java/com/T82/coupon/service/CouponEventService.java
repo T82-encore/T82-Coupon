@@ -10,4 +10,5 @@ public interface CouponEventService {
     void createCouponEvent(CouponEventRequestDto req);
     void issueCoupon(String userId, String couponId);
     List<CouponResponseDto> getEventCoupons();
+
 }
