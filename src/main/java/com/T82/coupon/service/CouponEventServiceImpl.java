@@ -1,7 +1,6 @@
 package com.T82.coupon.service;
 
 import com.T82.common_exception.annotation.CustomException;
-import com.T82.common_exception.annotation.ExecutionTimeLog;
 import com.T82.common_exception.exception.ErrorCode;
 import com.T82.common_exception.exception.coupon.*;
 import com.T82.coupon.dto.request.CouponEventRequestDto;
@@ -54,6 +53,7 @@ public class CouponEventServiceImpl implements CouponEventService{
     @Transactional
     @CustomException(ErrorCode.FAILED_ISSUE_COUPON)
     public void issueCoupon(String couponId,String userId){
+        log.info("toKafka {}, {}",couponId, userId);
         CouponEvent byCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(couponId)).orElseThrow(NotFoundEventCouponException::new);
         if(couponBoxRepository.findByCouponIdAndUserId(UUID.fromString(couponId),userId).isPresent()) throw new CouponAlreadyIssuedException(); //중복 발급 불가
         if(byCouponId.getRestCoupon()<=0) throw new NotFoundRemainingCouponException();
@@ -73,6 +73,7 @@ public class CouponEventServiceImpl implements CouponEventService{
     @Transactional
     @CustomException(ErrorCode.FAILED_ISSUE_COUPON)
     public void issueCouponFromEvent(IssueCouponDto req) {
+        log.info("fromKafka {}",req.toString());
         couponService.giveCouponToUser(req.couponId(),req.userId());
         CouponEvent byCouponCouponId = couponEventRepository.findByCoupon_CouponId(UUID.fromString(req.couponId())).orElseThrow(CouponNotFoundException::new); //쿠폰존재x
         if (byCouponCouponId.getRestCoupon()<=0) throw new NotFoundRemainingCouponException();

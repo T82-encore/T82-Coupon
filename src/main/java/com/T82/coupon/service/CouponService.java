@@ -14,13 +14,12 @@ import java.util.List;
 public interface CouponService {
     void createCoupon(CouponRequestDto req);
 
-    Page<CouponResponseDto> getCouponsByCategory(String category, Pageable pageRequest);
+    List<CouponResponseDto> getCouponsByCategory(String category);
 
     void giveCouponToUser(String couponId, String userId);
 
-    Page<CouponResponseDto> getValidCoupons(Pageable pageRequest,UserDto userDto);
+    List<CouponResponseDto> getValidCoupons(UserDto userDto);
 
     CouponVerifyResponseDto verifyCoupons(CouponVerifyRequestDto req);
-
 
 }
